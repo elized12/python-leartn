@@ -71,7 +71,7 @@
                 <div class="user-profile">
                     <a href="{{ $user ? route('user.profile', ['userId' => $user->id]) : '#' }}"
                         style="text-decoration: none;">
-                        <span class="username">{{ $user->name ?? 'none' }}</span>
+                        <span class="username">{{ $user->name ?? 'Войти' }}</span>
                     </a>
                 </div>
             </div>

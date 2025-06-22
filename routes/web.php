@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\Task\TaskController as AdminTaskController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\Task\TaskController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;

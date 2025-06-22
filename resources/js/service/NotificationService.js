@@ -177,3 +177,4 @@ export class NotificationService {
     }
 }
 
+window.NotificationService = new NotificationService();

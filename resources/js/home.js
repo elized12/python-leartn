@@ -42,71 +42,72 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    document.getElementById('markAllAsRead').addEventListener('click', function (e) {
-        e.preventDefault();
+    if (userId) {
+        document.getElementById('markAllAsRead').addEventListener('click', function (e) {
+            e.preventDefault();
 
-        const unreadNotifications = document.querySelectorAll('.notification-item.unread');
+            const unreadNotifications = document.querySelectorAll('.notification-item.unread');
 
-        const promises = Array.from(unreadNotifications).map(notification => {
-            const notificationId = notification.getAttribute('data-notification-id');
+            const promises = Array.from(unreadNotifications).map(notification => {
+                const notificationId = notification.getAttribute('data-notification-id');
 
-            return fetch(`/notification/${notificationId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status) {
-                        notification.remove();
+                return fetch(`/notification/${notificationId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     }
-                    return data;
-                });
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status) {
+                            notification.remove();
+                        }
+                        return data;
+                    });
+            });
+
+            Promise.all(promises)
+                .then(() => updateNotificationCount())
+                .catch(error => console.error('Ошибка:', error));
         });
 
-        Promise.all(promises)
-            .then(() => updateNotificationCount())
-            .catch(error => console.error('Ошибка:', error));
-    });
+        const notificationBell = document.getElementById('notificationBell');
+        const notificationDropdown = document.getElementById('notificationDropdown');
 
-    const notificationBell = document.getElementById('notificationBell');
-    const notificationDropdown = document.getElementById('notificationDropdown');
-
-    notificationBell.addEventListener('click', function (e) {
-        e.stopPropagation();
-        notificationDropdown.classList.toggle('show');
-    });
-
-    document.addEventListener('click', function () {
-        notificationDropdown.classList.remove('show');
-    });
-
-    notificationDropdown.addEventListener('click', function (e) {
-        e.stopPropagation();
-    });
-
-    document.querySelectorAll('.notification-item').forEach(item => {
-        item.addEventListener('click', function () {
-            this.classList.remove('unread');
-            updateNotificationCount();
+        notificationBell.addEventListener('click', function (e) {
+            e.stopPropagation();
+            notificationDropdown.classList.toggle('show');
         });
-    });
 
-
-    const channel = `user.task.${window.userId}`;
-    window.Echo.private(channel).listen('.attempt.notification', (event) => {
-        const typeMessage = event.type;
-
-        notificationService.showNotification({
-            type: typeMessage,
-            title: 'Попытка задачи',
-            message: event.messafge,
-            duration: 5000,
-            closeable: true
+        document.addEventListener('click', function () {
+            notificationDropdown.classList.remove('show');
         });
-    });
+
+        notificationDropdown.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', function () {
+                this.classList.remove('unread');
+                updateNotificationCount();
+            });
+        });
+
+        const channel = `user.task.${window.userId}`;
+        window.Echo.private(channel).listen('.attempt.notification', (event) => {
+            const typeMessage = event.type;
+
+            notificationService.showNotification({
+                type: typeMessage,
+                title: 'Попытка задачи',
+                message: event.messafge,
+                duration: 5000,
+                closeable: true
+            });
+        });
+    }
 });
 
 

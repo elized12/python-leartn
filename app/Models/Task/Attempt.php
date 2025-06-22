@@ -18,7 +18,8 @@ class Attempt extends Model
         'task_id',
         'user_id',
         'execution_time_s',
-        'peak_memory_usage_b'
+        'peak_memory_usage_b',
+        'description'
     ];
 
     protected $casts = [

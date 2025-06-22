@@ -9,6 +9,7 @@ enum TaskStatus: string
     case MEMORY_LIMIT = 'Memory limit';
     case TIME_LIMIT = 'Time limit';
     case OTHER_ERROR = 'Error';
+    case PENDING = 'Pending';
 
     static public function getAllValues(): array
     {

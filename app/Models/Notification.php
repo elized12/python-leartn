@@ -6,17 +6,18 @@ use App\Service\Message\MessageType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Notifacation extends Model
+class Notification extends Model
 {
     use HasFactory;
 
-    protected $table = 'notifaction';
+    protected $table = 'notification';
 
     protected $fillable = [
         'id',
         'message',
         'type',
         'receiver_id',
+        'visible'
     ];
 
     protected $casts = [

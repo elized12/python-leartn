@@ -13,61 +13,64 @@
 <body>
     <div class="container">
         <div class="task-section">
+            <a class="add-test-case" style="margin-top:0;margin-bottom:15px; text-decoration: none;"
+                href="{{route('home') }}">Назад</a>
             <div class="task-card">
                 <div class="task-header">
                     <div>
                         <span class="task-category">Алгоритмы / Массивы</span>
-                        <h1 class="task-title">Сумма двух чисел</h1>
+                        <h1 class="task-title">{{ $task->title }}</h1>
                     </div>
-                    <span class="task-difficulty easy">Начинающий</span>
+                    @php
+                        if ($task->rating < 1200) {
+                            $levelTask = 'Начинающиий';
+                            $classTask = 'easy';
+                        } elseif (1200 <= $task->rating && $task->rating < 1800) {
+                            $levelTask = 'Средний';
+                            $classTask = 'medium';
+                        } else {
+                            $levelTask = 'Професионал';
+                            $classTask = 'hard';
+                        }
+                    @endphp
+                    <span class="task-difficulty {{ $classTask }}">
+                        {{ $levelTask }}
+                    </span>
                 </div>
 
                 <div class="task-description">
-                    <p>Напишите функцию <code>two_sum</code>, которая принимает список чисел и целевое число. Функция
-                        должна вернуть индексы двух чисел, которые в сумме дают целевое значение.</p>
-                    <p>Можно предположить, что существует ровно одно решение, и нельзя использовать один и тот же
-                        элемент дважды.</p>
+                    {!! $task->description !!}
                 </div>
 
-                <div class="io-example">
-                    <div class="io-title">Пример 1:</div>
-                    <p><strong>Вход:</strong> nums = [2,7,11,15], target = 9</p>
-                    <p><strong>Выход:</strong> [0,1]</p>
-                    <p><strong>Объяснение:</strong> nums[0] + nums[1] == 9 → [0, 1]</p>
-                </div>
-
-                <div class="io-example">
-                    <div class="io-title">Пример 2:</div>
-                    <p><strong>Вход:</strong> nums = [3,2,4], target = 6</p>
-                    <p><strong>Выход:</strong> [1,2]</p>
-                </div>
-
-                <div class="io-example">
-                    <div class="io-title">Ограничения:</div>
-                    <ul>
-                        <li>2 ≤ nums.length ≤ 10<sup>4</sup></li>
-                        <li>-10<sup>9</sup> ≤ nums[i] ≤ 10<sup>9</sup></li>
-                        <li>-10<sup>9</sup> ≤ target ≤ 10<sup>9</sup></li>
-                    </ul>
+                <div class="task-example">
+                    {!! $task->example !!}
                 </div>
             </div>
         </div>
 
-        <div class="editor-container">
-            <div class="task-card">
-                <h3>Редактор кода</h3>
-                <div id="text-editor"></div>
-                <button class="run-button">Запустить код</button>
-                <div class="output-container">
-                    <div class="io-title">Вывод:</div>
-                    <div id="output"></div>
+        <form action="{{route('task.attempt.send', ['taskId' => $task->id])}}" method="POST">
+            @csrf
+            <div class="text-editor-block task-card">
+                <div class="editor-container">
+                    <h3>Редактор кода</h3>
+                    <div id="text-editor"></div>
+                    <div id="spinner"></div>
+                    <textarea name="code" id="text-editor-textarea"></textarea>
+                    <button type="submit" class="run-button">Запустить код</button>
+                    <div class="output-container">
+                        <div class="io-title">Вывод:</div>
+                        <div id="output"></div>
+                        <div id="spinner-output"></div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.js"></script>
-    @vite(['resources/js/text-editor.js', 'resources/css/task/task.css'])
+    <script>
+        window.userId = '{{auth()->user()->id}}';
+    </script>
+    @vite(['resources/js/echo.js', 'resources/js/task/text-editor.js', 'resources/css/task/task.css'])
 </body>
 
 </html>

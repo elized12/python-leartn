@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    if (userId) {
+    if (window.userId) {
         document.getElementById('markAllAsRead').addEventListener('click', function (e) {
             e.preventDefault();
 
@@ -97,15 +97,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const channel = `user.task.${window.userId}`;
         window.Echo.private(channel).listen('.attempt.notification', (event) => {
-            const typeMessage = event.type;
-
+            const typeMessage = (event.type).toLowerCase();
             notificationService.showNotification({
                 type: typeMessage,
                 title: 'Попытка задачи',
-                message: event.messafge,
+                message: event.message,
                 duration: 5000,
                 closeable: true
             });
+
+            let count = 0;
+            const notificationBlockCount = document.getElementById('notification-count-element');
+            if (notificationBlockCount) {
+                count = Number.parseInt(notificationBlockCount.innerText) + 1;
+            } else {
+                count = 1;
+            }
+            notificationBlockCount.innerText = count;
         });
     }
 });

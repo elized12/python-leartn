@@ -25,6 +25,9 @@
                 </a>
                 <ul class="nav-links">
                     <li><a href="#" class="active"><i class="fas fa-list-ul"></i> Задачи</a></li>
+                    @if ($user && $user->is_admin)
+                        <li><a href="{{ route('admin.main.show') }}"><i class="fas fa-list-ul"></i> Админ панель</a></li>
+                    @endif
                 </ul>
             </div>
             <div class="nav-right">
@@ -32,9 +35,8 @@
                     <div class="notification-container">
                         <div class="notification-bell" id="notificationBell">
                             <i class="fas fa-bell"></i>
-                            @if($notifications->where('visible', true)->count() > 0)
-                                <span class="notification-count">{{ $notifications->where('visible', true)->count() }}</span>
-                            @endif
+                            <span class="notification-count"
+                                id="notification-count-element">{{ $notifications->where('visible', true)->count() }}</span>
                         </div>
                         <div class="notification-dropdown" id="notificationDropdown">
                             <div class="notification-header">
@@ -69,7 +71,7 @@
                 @endif
 
                 <div class="user-profile">
-                    <a href="{{ $user ? route('user.profile', ['userId' => $user->id]) : '#' }}"
+                    <a href="{{ $user ? route('user.profile', ['userId' => $user->id]) : route('login') }}"
                         style="text-decoration: none;">
                         <span class="username">{{ $user->name ?? 'Войти' }}</span>
                     </a>
@@ -169,7 +171,7 @@
     </div>
 
     <script>
-        const userId = {{ json_encode(optional($user)->id) ?? null }};
+        window.userId = {{ json_encode(optional($user)->id) ?? null }};
     </script>
 
     @vite(['resources/js/home.js', 'resources/js/service/NotificationService.js', 'resources/js/echo.js'])

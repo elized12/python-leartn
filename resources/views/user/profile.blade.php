@@ -19,6 +19,12 @@
                 <i class="fas fa-code"></i>
                 <span>code master</span>
             </a>
+            <form method="POST" action="{{ route('logout') }}" class="logout-form">
+                @csrf
+                <button type="submit" class="logout-button">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </button>
+            </form>
         </div>
     </nav>
 

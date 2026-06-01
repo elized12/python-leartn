@@ -58,6 +58,21 @@ REVERB_APP_KEY=CHANGE_ME_REVERB_KEY
 REVERB_APP_SECRET=CHANGE_ME_REVERB_SECRET
 ```
 
+Для проверки решений внутри Docker Laravel запускает отдельные judge-контейнеры. Они должны видеть тот же `storage` volume, что и контейнер `app`. Если проект лежит, например, в папке `app-python-learn`, Docker Compose обычно создаёт volume `app-python-learn_app_storage`. Укажите это имя в двух переменных:
+
+```dotenv
+APP_STORAGE_VOLUME=app-python-learn_app_storage
+JUDGE_STORAGE_VOLUME=app-python-learn_app_storage
+JUDGE_DOCKER_UID=33
+JUDGE_DOCKER_GID=33
+```
+
+Проверить реальное имя можно командой:
+
+```bash
+docker volume ls | grep app_storage
+```
+
 Для генерации случайных ключей можно использовать:
 
 ```bash

@@ -318,6 +318,7 @@ class CodeJudgeService
             return;
         }
 
+        $this->makePathTraversable($workspacePath);
         @chmod($workspacePath, 0777);
 
         $iterator = new \RecursiveIteratorIterator(
@@ -327,6 +328,26 @@ class CodeJudgeService
 
         foreach ($iterator as $item) {
             @chmod($item->getPathname(), $item->isDir() ? 0777 : 0666);
+        }
+    }
+
+    private function makePathTraversable(string $workspacePath): void
+    {
+        $storageRoot = rtrim(Storage::path(''), DIRECTORY_SEPARATOR);
+        $currentPath = rtrim($workspacePath, DIRECTORY_SEPARATOR);
+        $paths = [];
+
+        while (str_starts_with($currentPath, $storageRoot) && $currentPath !== $storageRoot) {
+            $paths[] = $currentPath;
+            $currentPath = dirname($currentPath);
+        }
+
+        $paths[] = $storageRoot;
+
+        foreach (array_reverse($paths) as $path) {
+            if (is_dir($path)) {
+                @chmod($path, 0755);
+            }
         }
     }
 

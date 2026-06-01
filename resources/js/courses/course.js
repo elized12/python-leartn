@@ -4,6 +4,7 @@ import LessonParser from "./service/LessonParser";
 class CoursePage {
     constructor() {
         this.currentLessonId = null;
+        this.lessonRequestId = 0;
         this.completedLessonIds = new Set((window.courseProgress?.completedLessonIds || []).map(Number));
         this.lessonsCount = Number(window.courseProgress?.lessonsCount || 0);
         this.init();
@@ -16,23 +17,31 @@ class CoursePage {
     }
 
     async selectLesson(lessonId) {
-        if (this.currentLessonId === lessonId) return;
+        const normalizedLessonId = Number(lessonId);
+        if (this.currentLessonId === normalizedLessonId) return;
+
+        this.currentLessonId = normalizedLessonId;
+        const requestId = ++this.lessonRequestId;
 
         document.querySelectorAll('.lesson-item').forEach(item => {
             item.classList.remove('active');
         });
 
-        const selectedLesson = document.querySelector(`[onclick*="selectLesson(${lessonId})"]`);
+        const selectedLesson = document.querySelector(`.lesson-item[data-lesson-id="${normalizedLessonId}"]`);
         if (selectedLesson) {
             selectedLesson.classList.add('active');
         }
 
         const container = document.querySelector('.lesson-content-main');
-        container.innerHTML = '';
+        container.replaceChildren();
 
         try {
-            const response = await fetch(`/course/lesson/${lessonId}`);
+            const response = await fetch(`/course/lesson/${normalizedLessonId}`);
             const data = await response.json();
+
+            if (requestId !== this.lessonRequestId || this.currentLessonId !== normalizedLessonId) {
+                return;
+            }
 
             if (!data.status) {
                 throw new Error(data.message || 'Ошибка сервера');
@@ -40,6 +49,7 @@ class CoursePage {
 
             const lesson = LessonParser.parseLessonFromJson(data.lesson);
 
+            container.replaceChildren();
             LessonRender.render(container, lesson);
 
             const titleElement = document.getElementById('lessonTitle');
@@ -47,10 +57,13 @@ class CoursePage {
                 titleElement.textContent = lesson.title;
             }
 
-            this.currentLessonId = lessonId;
             this.updateCompleteButton();
 
         } catch (error) {
+            if (requestId !== this.lessonRequestId || this.currentLessonId !== normalizedLessonId) {
+                return;
+            }
+
             console.error('Ошибка загрузки урока:', error);
             container.innerHTML = `
                 <div style="padding: 20px; text-align: center; color: red;">
@@ -63,7 +76,7 @@ class CoursePage {
     loadFirstLesson() {
         const firstLessonItem = document.querySelector('.lesson-item');
         if (firstLessonItem) {
-            const lessonId = firstLessonItem.getAttribute('onclick')?.match(/selectLesson\((\d+)\)/)?.[1];
+            const lessonId = firstLessonItem.dataset.lessonId;
             if (lessonId) {
                 setTimeout(() => {
                     this.selectLesson(lessonId);

@@ -1,4 +1,4 @@
-@extends('admin.layout.admin')
+@extends('layout.admin')
 
 @section('title', 'Управление задачами')
 
@@ -39,7 +39,7 @@
                         @endif
                     </td>
                     <td>
-                        <a class="btn btn-sm btn-warning">
+                        <a href="{{ route('admin.task.edit', $task) }}" class="btn btn-sm btn-warning" style="text-decoration:none;">
                             <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>

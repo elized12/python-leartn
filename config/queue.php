@@ -15,6 +15,12 @@ return [
 
     'default' => env('QUEUE_CONNECTION', 'database'),
 
+    'names' => [
+        'solution_checks' => env('QUEUE_SOLUTION_CHECKS', 'solution-checks'),
+        'ai_hints' => env('QUEUE_AI_HINTS', 'ai-hints'),
+        'docker_builds' => env('QUEUE_DOCKER_BUILDS', 'docker-builds'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Queue Connections

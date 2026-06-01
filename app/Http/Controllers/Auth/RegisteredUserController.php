@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\AdminDashboardUpdated;
 use App\Http\Controllers\Controller;
+use App\Models\Task\Attempt;
+use App\Models\Task\Task;
 use App\Models\User;
+use App\Service\Task\TaskStatus;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,6 +46,21 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+        event(new AdminDashboardUpdated(
+            'user',
+            'Новый пользователь',
+            "{$user->name} зарегистрировался",
+            [
+                'users' => User::count(),
+                'tasks' => Task::count(),
+                'attempts_today' => Attempt::whereDate('created_at', today())->count(),
+                'completed_tasks' => Attempt::where('status', TaskStatus::COMPLETED->value)->count(),
+            ],
+            [
+                'user_name' => $user->name,
+                'user_email' => $user->email,
+            ],
+        ));
 
         Auth::login($user);
 

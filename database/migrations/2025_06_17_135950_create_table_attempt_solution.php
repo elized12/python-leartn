@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('task_id');
             $table->unsignedBigInteger('user_id');
             $table->decimal('execution_time_s', 8, 3)->nullable();
-            $table->unsignedBigInteger('peak_memory_usage_b')->nullable();
+            $table->unsignedBigInteger('peak_memory_usage_mb')->nullable();
 
             $table->foreign('task_id')
                 ->references('id')

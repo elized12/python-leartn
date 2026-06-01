@@ -14,7 +14,7 @@ return new class extends Migration
 
             $table->string('title');
             $table->decimal('time_limit_s', 8, 3)->nullable();
-            $table->unsignedBigInteger('memory_limit_b')->nullable();
+            $table->unsignedBigInteger('memory_limit_mb')->nullable();
             $table->text('description')->nullable();
             $table->unsignedSmallInteger('rating')->default(1200);
         });

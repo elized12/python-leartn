@@ -1,61 +1,337 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Code master
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Веб-платформа для обучения Python: курсы, уроки, задачи, автоматическая проверка решений в Docker, рейтинг пользователей, админ-панель, websocket-уведомления через Reverb и подсказки от локальной нейросети через Ollama.
 
-## About Laravel
+## Что входит в Docker-сборку
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- `app` - Laravel/PHP-FPM приложение.
+- `nginx` - веб-сервер для сайта.
+- `reverb` - websocket-сервер Laravel Reverb.
+- `queue-solution` - очередь проверки решений задач.
+- `queue-ai` - очередь генерации подсказок нейросетью.
+- `queue-docker` - очередь сборки Docker-окружений из админ-панели.
+- `scheduler` - Laravel scheduler.
+- `mysql` - база данных.
+- `redis` - очереди и cache.
+- `ollama` - локальная нейросеть для подсказок.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Требования к серверу
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+На сервере должны быть установлены:
 
-## Learning Laravel
+- Docker
+- Docker Compose plugin
+- Git
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Также нужен исходящий доступ к:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- `deb.debian.org`
+- `registry.npmjs.org`
+- `repo.packagist.org`
+- `github.com`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Иначе первая сборка не сможет скачать зависимости.
 
-## Laravel Sponsors
+## Быстрый запуск на сервере
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. Склонируйте проект и перейдите в папку:
 
-### Premium Partners
+```bash
+git clone <URL_РЕПОЗИТОРИЯ> python-learn
+cd python-learn
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+2. Создайте `.env` из серверного шаблона:
 
-## Contributing
+```bash
+cp .env.server.example .env
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+3. Заполните в `.env` минимум эти значения:
 
-## Code of Conduct
+```dotenv
+APP_URL=http://YOUR_DOMAIN_OR_IP
+VITE_REVERB_HOST=YOUR_DOMAIN_OR_IP
+DB_PASSWORD=CHANGE_ME_DB_PASSWORD
+DB_ROOT_PASSWORD=CHANGE_ME_ROOT_PASSWORD
+REVERB_APP_KEY=CHANGE_ME_REVERB_KEY
+REVERB_APP_SECRET=CHANGE_ME_REVERB_SECRET
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Для генерации случайных ключей можно использовать:
 
-## Security Vulnerabilities
+```bash
+openssl rand -hex 16
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+4. Сгенерируйте `APP_KEY`:
 
-## License
+```bash
+docker compose run --rm app php artisan key:generate --show
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Вставьте результат в `.env`:
+
+```dotenv
+APP_KEY=base64:...
+```
+
+5. Соберите и запустите контейнеры:
+
+```bash
+docker compose up -d --build
+```
+
+Миграции запускаются автоматически при старте `app`, если в `.env` стоит:
+
+```dotenv
+APP_RUN_MIGRATIONS=true
+```
+
+6. Соберите Docker-образы для проверки пользовательского Python-кода:
+
+```bash
+docker compose exec app php artisan judge:install-python
+docker compose exec app php artisan judge:install-python-pandas
+```
+
+7. Установите модель Ollama для подсказок:
+
+```bash
+curl http://127.0.0.1:11434/api/pull -d '{"name":"qwen2.5-coder:3b","stream":false}'
+```
+
+Модель также можно установить из админ-панели в разделе `Нейросеть`.
+
+## Важные переменные окружения
+
+### Сайт
+
+```dotenv
+APP_URL=http://YOUR_DOMAIN_OR_IP
+APP_HTTP_PORT=80
+APP_DEBUG=false
+APP_RUN_MIGRATIONS=true
+```
+
+### База данных
+
+В Docker Compose база доступна приложению по имени сервиса `mysql`:
+
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=python_learn
+DB_USERNAME=python_learn
+DB_PASSWORD=CHANGE_ME_DB_PASSWORD
+DB_ROOT_PASSWORD=CHANGE_ME_ROOT_PASSWORD
+```
+
+Не ставьте `DB_HOST=127.0.0.1` внутри Docker-сборки, иначе Laravel будет искать MySQL внутри своего контейнера.
+
+### Redis и очереди
+
+```dotenv
+CACHE_STORE=redis
+QUEUE_CONNECTION=redis
+REDIS_CLIENT=predis
+REDIS_HOST=redis
+QUEUE_SOLUTION_CHECKS=solution-checks
+QUEUE_AI_HINTS=ai-hints
+QUEUE_DOCKER_BUILDS=docker-builds
+QUEUE_SOLUTION_WORKERS=6
+QUEUE_AI_WORKERS=2
+QUEUE_DOCKER_WORKERS=1
+QUEUE_SOLUTION_TIMEOUT=120
+QUEUE_AI_TIMEOUT=240
+QUEUE_DOCKER_TIMEOUT=1500
+```
+
+### Websocket/Reverb
+
+Backend внутри Docker обращается к сервису `reverb`, а браузер пользователя подключается к публичному домену/IP:
+
+```dotenv
+BROADCAST_CONNECTION=reverb
+REVERB_HOST=reverb
+REVERB_PORT=8080
+REVERB_SCHEME=http
+REVERB_PUBLIC_PORT=8080
+
+VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+VITE_REVERB_HOST="YOUR_DOMAIN_OR_IP"
+VITE_REVERB_PORT="${REVERB_PUBLIC_PORT}"
+VITE_REVERB_SCHEME=http
+```
+
+Если меняете `VITE_REVERB_*`, пересоберите контейнеры:
+
+```bash
+docker compose up -d --build
+```
+
+Эти значения попадают в JavaScript во время `vite build`.
+
+### Ollama
+
+```dotenv
+OLLAMA_ENABLED=true
+OLLAMA_URL=http://ollama:11434/api/chat
+OLLAMA_MODEL=qwen2.5-coder:3b
+OLLAMA_TIMEOUT=120
+OLLAMA_PULL_TIMEOUT=600
+OLLAMA_PUBLIC_PORT=11434
+```
+
+Ollama в compose опубликована только на `127.0.0.1:11434`, чтобы API модели не торчал наружу.
+
+## Очереди
+
+Проверка задач и подсказки ИИ вынесены в разные очереди:
+
+- `solution-checks` - проверка решений.
+- `ai-hints` - подсказки нейросети.
+- `docker-builds` - сборка Docker-образов окружений из админ-панели.
+
+Количество воркеров задается в `.env`:
+
+```dotenv
+QUEUE_SOLUTION_WORKERS=6
+QUEUE_AI_WORKERS=2
+QUEUE_DOCKER_WORKERS=1
+```
+
+После изменения количества воркеров перезапустите сервисы:
+
+```bash
+docker compose up -d
+```
+
+Один контейнер `queue-solution` поднимет внутри себя `QUEUE_SOLUTION_WORKERS` процессов `queue:work`, `queue-ai` поднимет `QUEUE_AI_WORKERS`, а `queue-docker` поднимет `QUEUE_DOCKER_WORKERS`.
+
+Посмотреть логи очередей:
+
+```bash
+docker compose logs -f queue-solution
+docker compose logs -f queue-ai
+docker compose logs -f queue-docker
+```
+
+## Админ-панель: Docker-образы и модели ИИ
+
+Через админ-панель можно собирать Docker-окружения для задач. В разделе окружений можно загрузить Dockerfile, указать имя образа, и сборка уйдет в очередь `docker-builds`. После успешной сборки окружение автоматически появится в списке и его можно выбрать у задачи.
+
+Там же есть кнопки для стандартных образов:
+
+```bash
+python-learn/judge-python:3.12
+python-learn/judge-python-pandas:3.12
+```
+
+Модели ИИ управляются в разделе `Нейросеть`. Админка показывает текущую модель, список установленных моделей Ollama, позволяет выбрать активную модель и скачать новую через Ollama pull.
+
+## Проверка пользовательского кода
+
+Laravel-контейнер использует Docker socket хоста:
+
+```yaml
+/var/run/docker.sock:/var/run/docker.sock
+```
+
+Это нужно, чтобы сервис проверки мог запускать изолированные контейнеры для пользовательских решений. На сервере Docker должен быть установлен и запущен.
+
+Стандартные judge-образы собираются командами:
+
+```bash
+docker compose exec app php artisan judge:install-python
+docker compose exec app php artisan judge:install-python-pandas
+```
+
+## Полезные команды
+
+Статус контейнеров:
+
+```bash
+docker compose ps
+```
+
+Логи всего проекта:
+
+```bash
+docker compose logs -f
+```
+
+Логи Laravel:
+
+```bash
+docker compose exec app tail -f storage/logs/laravel.log
+```
+
+Очистить и заново собрать Laravel cache:
+
+```bash
+docker compose exec app php artisan optimize:clear
+docker compose exec app php artisan config:cache
+docker compose exec app php artisan route:cache
+```
+
+Выполнить миграции:
+
+```bash
+docker compose exec app php artisan migrate --force
+```
+
+Остановить проект:
+
+```bash
+docker compose down
+```
+
+Остановить проект и удалить данные MySQL/Redis/Ollama:
+
+```bash
+docker compose down -v
+```
+
+Осторожно: `docker compose down -v` удалит данные базы, Redis и скачанные модели Ollama.
+
+## Обновление проекта на сервере
+
+```bash
+git pull
+docker compose up -d --build
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan optimize:clear
+```
+
+После изменения `VITE_REVERB_*`, frontend-файлов, `package.json` или `vite.config.js` обязательно нужна пересборка через `--build`.
+
+## Локальная разработка без Docker
+
+Если запускаете Laravel локально, а не в Docker:
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+npm run dev
+composer run serve
+```
+
+`composer run serve` запускает локальный сервер Laravel с увеличенными лимитами загрузки файлов: видео до 200 МБ. Если запускать обычный `php artisan serve`, PHP может оставить стандартный лимит `upload_max_filesize = 2M`, и загрузка видео будет падать с ошибкой 422.
+
+Для очередей локально:
+
+```bash
+php artisan queue:work --queue=solution-checks
+php artisan queue:work --queue=ai-hints
+```
+
+Для websocket:
+
+```bash
+php artisan reverb:start
+```

@@ -1,11 +1,19 @@
 <?php
 
 use App\Http\Controllers\Admin\Task\TaskController as AdminTaskController;
+use App\Http\Controllers\Admin\Task\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\Task\EnvironmentController as AdminEnvironmentController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AiSettingsController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RatingController;
+use App\Http\Controllers\SolutionCheckerController;
 use App\Http\Controllers\User\ProfileController;
-use App\Http\Controllers\Task\TaskController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskController as MainTasksController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'showHomePage'])
@@ -18,13 +26,79 @@ Route::middleware('auth')->group(function () {
     Route::get('/task/solution/{taskId}', [TaskController::class, 'showTaskPage'])
         ->name('task.solution');
 
-    Route::post('/task/solution/{taskId}', [TaskController::class, 'checkSolution'])
+    Route::get('/task/solution/{taskId}/author-solution', [TaskController::class, 'showAuthorSolution'])
+        ->where('taskId', '[0-9]+')
+        ->name('task.author-solution.show');
+
+    Route::post('/task/solution/{taskId}/ai-hint', [TaskController::class, 'aiHint'])
+        ->where('taskId', '[0-9]+')
+        ->name('task.ai-hint');
+
+    Route::get('/task/solution/{taskId}/files/{fileId}', [TaskController::class, 'downloadPublicFile'])
+        ->where(['taskId' => '[0-9]+', 'fileId' => '[0-9]+'])
+        ->name('task.files.download');
+
+    Route::post('/task/solution/{taskId}', [SolutionCheckerController::class, 'checkSolution'])
         ->where('taskId', '[0-9]+')
         ->name('task.attempt.send');
 
-    Route::get('/profile/{userId}', [ProfileController::class, 'showProfilePage'])
-        ->where('userId', '[0-9]+')
-        ->name('user.profile');
+    Route::post('/task/solution/{taskId}/comments', [TaskController::class, 'storeComment'])
+        ->where('taskId', '[0-9]+')
+        ->name('task.comments.store');
+
+    Route::post('/courses/create', [CourseController::class, 'createCourse'])
+        ->name('courses.create.create');
+
+    Route::put('/courses/{course}', [CourseController::class, 'updateCourse'])
+        ->where('course', '[0-9]+')
+        ->name('courses.update');
+
+    Route::post('/courses/assets', [CourseController::class, 'uploadAsset'])
+        ->name('courses.assets.upload');
+
+    Route::post('/courses/join', [CourseController::class, 'joinCourse'])
+        ->name('course.join');
+
+    Route::get('/course/lesson/{lessonId}', [CourseController::class, 'getLesson'])
+        ->where('lessonId', '[0-9]+')
+        ->name('course.lesson.get');
+
+    Route::post('/course/lesson/{lesson}/complete', [CourseController::class, 'completeLesson'])
+        ->where('lesson', '[0-9]+')
+        ->name('course.lesson.complete');
+
+    Route::middleware('notification-checker')->group(function () {
+        Route::get('/courses', [CourseController::class, 'showCoursesPage'])
+            ->name('courses.show');
+
+        Route::get('/tasks', [MainTasksController::class, 'showTasksPage'])
+            ->name('tasks.show');
+
+        Route::get('/rating', [RatingController::class, 'index'])
+            ->name('rating.index');
+
+        Route::get('/courses/create', [CourseController::class, 'showCreatePage'])
+            ->name('courses.create.show');
+
+        Route::get('/courses/drafts', [CourseController::class, 'showDraftsPage'])
+            ->name('courses.drafts.show');
+
+        Route::get('/courses/{course}/edit', [CourseController::class, 'showEditPage'])
+            ->where('course', '[0-9]+')
+            ->name('courses.edit.show');
+
+        Route::get('/course/{courseName}', [CourseController::class, 'showCoursePage'])
+            ->where('courseName', '[-a-zA-Z0-9]+')
+            ->name('course.show');
+
+        Route::get('/profile/{userId}', [ProfileController::class, 'showProfilePage'])
+            ->where('userId', '[0-9]+')
+            ->name('user.profile');
+
+        Route::get('/preview/course/{courseName}', [CourseController::class, 'showPreviewCourse'])
+            ->where('courseName', '[-a-zA-Z0-9]+')
+            ->name('preview.course.show');
+    });
 
     Route::middleware('admin')->group(function () {
 
@@ -36,6 +110,67 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/admin/task/create', [AdminTaskController::class, 'createTask'])
             ->name('admin.task-create.create');
+
+        Route::get('/admin/task/{task}/edit', [AdminTaskController::class, 'showEditPage'])
+            ->where('task', '[0-9]+')
+            ->name('admin.task.edit');
+
+        Route::put('/admin/task/{task}', [AdminTaskController::class, 'updateTask'])
+            ->where('task', '[0-9]+')
+            ->name('admin.task.update');
+
+        Route::get('/admin/environments', [AdminEnvironmentController::class, 'index'])
+            ->name('admin.environments.index');
+
+        Route::post('/admin/environments', [AdminEnvironmentController::class, 'store'])
+            ->name('admin.environments.store');
+
+        Route::post('/admin/environments/install-default', [AdminEnvironmentController::class, 'installDefault'])
+            ->name('admin.environments.install-default');
+
+        Route::post('/admin/environments/install-pandas', [AdminEnvironmentController::class, 'installPandas'])
+            ->name('admin.environments.install-pandas');
+
+        Route::put('/admin/environments/{environment}', [AdminEnvironmentController::class, 'update'])
+            ->name('admin.environments.update');
+
+        Route::delete('/admin/environments/{environment}', [AdminEnvironmentController::class, 'destroy'])
+            ->name('admin.environments.destroy');
+
+        Route::get('/admin/categories', [AdminCategoryController::class, 'index'])
+            ->name('admin.categories.index');
+
+        Route::post('/admin/categories', [AdminCategoryController::class, 'store'])
+            ->name('admin.categories.store');
+
+        Route::put('/admin/categories/{category}', [AdminCategoryController::class, 'update'])
+            ->name('admin.categories.update');
+
+        Route::delete('/admin/categories/{category}', [AdminCategoryController::class, 'destroy'])
+            ->name('admin.categories.destroy');
+
+        Route::get('/admin/users', [AdminUserController::class, 'index'])
+            ->name('admin.users.index');
+
+        Route::get('/admin/ai-settings', [AiSettingsController::class, 'index'])
+            ->name('admin.ai-settings.index');
+
+        Route::put('/admin/ai-settings', [AiSettingsController::class, 'update'])
+            ->name('admin.ai-settings.update');
+
+        Route::put('/admin/ai-settings/prompt', [AiSettingsController::class, 'updatePrompt'])
+            ->name('admin.ai-settings.prompt.update');
+
+        Route::post('/admin/ai-settings/install', [AiSettingsController::class, 'install'])
+            ->name('admin.ai-settings.install');
+
+        Route::put('/admin/users/{user}/toggle-block', [AdminUserController::class, 'toggleBlock'])
+            ->where('user', '[0-9]+')
+            ->name('admin.users.toggle-block');
+
+        Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])
+            ->where('user', '[0-9]+')
+            ->name('admin.users.destroy');
 
         Route::get('/admin/panel', [AdminController::class, 'showMainPage'])
             ->name('admin.main.show');

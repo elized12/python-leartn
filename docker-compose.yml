@@ -1,0 +1,148 @@
+x-build-args: &build-args
+  VITE_APP_NAME: "${APP_NAME:-Code master}"
+  VITE_REVERB_APP_KEY: "${REVERB_APP_KEY:-local}"
+  VITE_REVERB_HOST: "${VITE_REVERB_HOST:-localhost}"
+  VITE_REVERB_PORT: "${VITE_REVERB_PORT:-8080}"
+  VITE_REVERB_SCHEME: "${VITE_REVERB_SCHEME:-http}"
+
+x-app-build: &app-build
+  context: .
+  target: app
+  args: *build-args
+
+services:
+  app:
+    build: *app-build
+    env_file:
+      - .env
+    environment:
+      APP_OPTIMIZE: "true"
+      APP_RUN_MIGRATIONS: "${APP_RUN_MIGRATIONS:-true}"
+    volumes:
+      - app_storage:/var/www/html/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  nginx:
+    build:
+      <<: *app-build
+      target: nginx
+    ports:
+      - "${APP_HTTP_PORT:-80}:80"
+    depends_on:
+      - app
+    volumes:
+      - app_storage:/var/www/html/storage:ro
+    restart: unless-stopped
+
+  reverb:
+    build: *app-build
+    env_file:
+      - .env
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "${REVERB_PUBLIC_PORT:-8080}:8080"
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      - app
+      - redis
+    restart: unless-stopped
+
+  queue-solution:
+    build: *app-build
+    env_file:
+      - .env
+    command: app-queue-worker "${QUEUE_SOLUTION_CHECKS:-solution-checks}" "${QUEUE_SOLUTION_WORKERS:-1}" "${QUEUE_SOLUTION_TIMEOUT:-120}"
+    volumes:
+      - app_storage:/var/www/html/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - app
+      - redis
+    restart: unless-stopped
+
+  queue-ai:
+    build: *app-build
+    env_file:
+      - .env
+    command: app-queue-worker "${QUEUE_AI_HINTS:-ai-hints}" "${QUEUE_AI_WORKERS:-1}" "${QUEUE_AI_TIMEOUT:-240}"
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      - app
+      - redis
+      - ollama
+    restart: unless-stopped
+
+  queue-docker:
+    build: *app-build
+    env_file:
+      - .env
+    command: app-queue-worker "${QUEUE_DOCKER_BUILDS:-docker-builds}" "${QUEUE_DOCKER_WORKERS:-1}" "${QUEUE_DOCKER_TIMEOUT:-1500}"
+    volumes:
+      - app_storage:/var/www/html/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - app
+      - redis
+    restart: unless-stopped
+
+  scheduler:
+    build: *app-build
+    env_file:
+      - .env
+    command: sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: "${DB_DATABASE:-python_learn}"
+      MYSQL_USER: "${DB_USERNAME:-python_learn}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-secret}"
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:-root_secret}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_secret}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "127.0.0.1:${OLLAMA_PUBLIC_PORT:-11434}:11434"
+    restart: unless-stopped
+
+volumes:
+  app_storage:
+  mysql_data:
+  redis_data:
+  ollama_data:

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Service\Message\MessageType;
+use App\Service\Notification\NotificationType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,13 +14,14 @@ class Notification extends Model
 
     protected $fillable = [
         'id',
-        'message',
+        'content',
         'type',
         'receiver_id',
-        'visible'
+        'visible',
+        'type'
     ];
 
     protected $casts = [
-        'type' => MessageType::class
+        'type' => NotificationType::class
     ];
 }

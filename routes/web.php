@@ -177,4 +177,4 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-require_once 'auth.php';
+require __DIR__ . '/auth.php';

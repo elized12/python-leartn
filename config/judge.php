@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'storage_volume' => env('JUDGE_STORAGE_VOLUME'),
     'docker_uid' => env('JUDGE_DOCKER_UID', 1000),
     'docker_gid' => env('JUDGE_DOCKER_GID', 1000),
     'wall_timeout_multiplier' => (int) env('JUDGE_WALL_TIMEOUT_MULTIPLIER', 10),

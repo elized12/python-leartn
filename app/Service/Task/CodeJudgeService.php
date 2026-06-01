@@ -217,10 +217,6 @@ class CodeJudgeService
             $containerName,
             '--rm',
             '-i',
-            '-v',
-            "{$workspacePath}:/workspace",
-            '-w',
-            '/workspace',
             "--memory={$memoryLimit}",
             "--memory-swap={$memoryLimit}",
             '--cpus=1',
@@ -229,6 +225,8 @@ class CodeJudgeService
             '--cap-drop=ALL',
             '--security-opt=no-new-privileges',
         ];
+
+        array_push($command, ...$this->dockerWorkspaceOptions($workspacePath));
 
         if ($dockerUser) {
             $command[] = '--user';
@@ -282,6 +280,27 @@ class CodeJudgeService
         }
 
         return "{$uid}:{$gid}";
+    }
+
+    private function dockerWorkspaceOptions(string $workspacePath): array
+    {
+        $storageVolume = config('judge.storage_volume');
+
+        if ($storageVolume && str_starts_with($workspacePath, '/var/www/html/storage/')) {
+            return [
+                '--mount',
+                "type=volume,source={$storageVolume},target=/var/www/html/storage",
+                '-w',
+                $workspacePath,
+            ];
+        }
+
+        return [
+            '-v',
+            "{$workspacePath}:/workspace",
+            '-w',
+            '/workspace',
+        ];
     }
 
     private function wallTimeoutForCpuLimit(int $cpuLimit): int

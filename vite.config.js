@@ -32,6 +32,7 @@ export default defineConfig({
                 'resources/js/admin/dashboard.js',
                 'resources/js/admin/realtime.js',
                 'resources/js/admin/task/task-create.js',
+                'resources/js/components/courses/ToolbarBlock.js',
                 'resources/js/courses/course.js',
                 'resources/js/courses/create.js',
                 'resources/js/courses/start-course.js',

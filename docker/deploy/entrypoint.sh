@@ -19,6 +19,7 @@ chown -R www-data:www-data storage bootstrap/cache
 rm -f public/hot
 
 php artisan package:discover --ansi
+php artisan optimize:clear --ansi
 
 if [ "${APP_RUN_MIGRATIONS:-false}" = "true" ]; then
     php artisan migrate --force

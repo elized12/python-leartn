@@ -143,6 +143,7 @@ services:
 
 volumes:
   app_storage:
+    name: "${APP_STORAGE_VOLUME:-python-learn_app_storage}"
   mysql_data:
   redis_data:
   ollama_data:

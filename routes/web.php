@@ -80,6 +80,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/preview/course/{courseName}', [CourseController::class, 'showPreviewCourse'])
             ->where('courseName', '[-a-zA-Z0-9]+')
             ->name('preview.course.show');
+
+        Route::get('/course/{courseName}', [CourseController::class, 'showCoursePage'])
+            ->where('courseName', '[-a-zA-Z0-9]+')
+            ->name('course.show');
     });
 
     Route::middleware('admin')->group(function () {
@@ -94,10 +98,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/courses/{course}/edit', [CourseController::class, 'showEditPage'])
                 ->where('course', '[0-9]+')
                 ->name('courses.edit.show');
-
-            Route::get('/course/{courseName}', [CourseController::class, 'showCoursePage'])
-                ->where('courseName', '[-a-zA-Z0-9]+')
-                ->name('course.show');
         });
 
         Route::put('/courses/{course}', [CourseController::class, 'updateCourse'])

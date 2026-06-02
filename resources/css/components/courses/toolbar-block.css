@@ -249,6 +249,10 @@
     background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
+.block-card[data-type="taskList"] .block-icon {
+    background: linear-gradient(135deg, #14b8a6, #0f766e);
+}
+
 .block-card[data-type="infoBox"] .block-icon {
     background: linear-gradient(135deg, #9333ea, #7c3aed);
 }

@@ -85,6 +85,20 @@
             </div>
         @endif
 
+        @if(session('success'))
+            <div class="course-flash-message success">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="course-flash-message error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
         <div class="courses-filter-section">
             <div class="filter-header">
                 <h2>{{ $activeFilter === 'my' ? 'Мои курсы' : 'Все курсы' }}</h2>
@@ -99,9 +113,11 @@
                         style="margin-right: 15px;">
                         <i class="fas fa-user-graduate"></i> Мои курсы
                     </a>
-                    <a href="{{ route('courses.create.show') }}" class="btn primary-btn" style="margin-right: 15px;">
-                        <i class="fas fa-plus"></i> Создать курс
-                    </a>
+                    @if(auth()->user()?->is_admin)
+                        <a href="{{ route('courses.create.show') }}" class="btn primary-btn" style="margin-right: 15px;">
+                            <i class="fas fa-plus"></i> Создать курс
+                        </a>
+                    @endif
                     <a href="{{ route('courses.drafts.show') }}" class="btn outline-btn" style="margin-right: 15px;">
                         <i class="fas fa-folder-open"></i> Черновики
                     </a>
@@ -176,6 +192,14 @@
                                         <a href="{{ route('courses.edit.show', $course) }}" class="btn outline-btn-sm">
                                             <i class="fas fa-pen"></i> Редактировать
                                         </a>
+                                        <form action="{{ route('courses.destroy', $course) }}" method="POST"
+                                            onsubmit="return confirm('Удалить курс? Это действие нельзя отменить.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn danger-btn-sm">
+                                                <i class="fas fa-trash"></i> Удалить
+                                            </button>
+                                        </form>
                                     @endif
                                 </div>
                             </div>

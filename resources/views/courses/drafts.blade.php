@@ -9,14 +9,30 @@
                     <p class="drafts-subtitle">Курсы, которые ещё не опубликованы и видны только в редакторе.</p>
                 </div>
                 <div class="filter-actions">
-                    <a href="{{ route('courses.create.show') }}" class="btn primary-btn">
-                        <i class="fas fa-plus"></i> Новый курс
-                    </a>
+                    @if(auth()->user()?->is_admin)
+                        <a href="{{ route('courses.create.show') }}" class="btn primary-btn">
+                            <i class="fas fa-plus"></i> Новый курс
+                        </a>
+                    @endif
                     <a href="{{ route('courses.show') }}" class="btn outline-btn">
                         <i class="fas fa-arrow-left"></i> Все курсы
                     </a>
                 </div>
             </div>
+
+            @if(session('success'))
+                <div class="course-flash-message success">
+                    <i class="fas fa-check-circle"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="course-flash-message error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
 
             <div class="all-courses">
                 @forelse ($drafts as $course)
@@ -51,6 +67,14 @@
                                         <a href="{{ route('courses.edit.show', $course) }}" class="btn primary-btn-sm">
                                             <i class="fas fa-pen"></i> Продолжить
                                         </a>
+                                        <form action="{{ route('courses.destroy', $course) }}" method="POST"
+                                            onsubmit="return confirm('Удалить черновик? Это действие нельзя отменить.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn danger-btn-sm">
+                                                <i class="fas fa-trash"></i> Удалить
+                                            </button>
+                                        </form>
                                     @endif
                                 </div>
                             </div>

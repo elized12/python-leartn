@@ -449,6 +449,27 @@ class CourseController extends Controller
         }
     }
 
+    public function destroyCourse(Course $course): RedirectResponse
+    {
+        $this->ensureCanManageCourse($course);
+
+        try {
+            DB::beginTransaction();
+
+            $courseTitle = $course->title;
+            $course->categories()->detach();
+            $course->delete();
+
+            DB::commit();
+
+            return back()->with('success', "Курс «{$courseTitle}» удалён");
+        } catch (\Exception $ex) {
+            DB::rollBack();
+
+            return back()->with('error', config('app.debug') ? $ex->getMessage() : 'Не удалось удалить курс');
+        }
+    }
+
     public function uploadAsset(Request $request): JsonResponse
     {
         $uploadedFile = $request->file('file');

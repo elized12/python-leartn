@@ -46,13 +46,6 @@ Route::middleware('auth')->group(function () {
         ->where('taskId', '[0-9]+')
         ->name('task.comments.store');
 
-    Route::post('/courses/create', [CourseController::class, 'createCourse'])
-        ->name('courses.create.create');
-
-    Route::put('/courses/{course}', [CourseController::class, 'updateCourse'])
-        ->where('course', '[0-9]+')
-        ->name('courses.update');
-
     Route::post('/courses/assets', [CourseController::class, 'uploadAsset'])
         ->name('courses.assets.upload');
 
@@ -77,20 +70,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/rating', [RatingController::class, 'index'])
             ->name('rating.index');
 
-        Route::get('/courses/create', [CourseController::class, 'showCreatePage'])
-            ->name('courses.create.show');
-
-        Route::get('/courses/drafts', [CourseController::class, 'showDraftsPage'])
-            ->name('courses.drafts.show');
-
-        Route::get('/courses/{course}/edit', [CourseController::class, 'showEditPage'])
-            ->where('course', '[0-9]+')
-            ->name('courses.edit.show');
-
-        Route::get('/course/{courseName}', [CourseController::class, 'showCoursePage'])
-            ->where('courseName', '[-a-zA-Z0-9]+')
-            ->name('course.show');
-
         Route::get('/profile/{userId}', [ProfileController::class, 'showProfilePage'])
             ->where('userId', '[0-9]+')
             ->name('user.profile');
@@ -101,6 +80,33 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('admin')->group(function () {
+        Route::middleware('notification-checker')->group(function () {
+            Route::get('/courses/create', [CourseController::class, 'showCreatePage'])
+                ->name('courses.create.show');
+
+
+            Route::get('/courses/drafts', [CourseController::class, 'showDraftsPage'])
+                ->name('courses.drafts.show');
+
+            Route::get('/courses/{course}/edit', [CourseController::class, 'showEditPage'])
+                ->where('course', '[0-9]+')
+                ->name('courses.edit.show');
+
+            Route::get('/course/{courseName}', [CourseController::class, 'showCoursePage'])
+                ->where('courseName', '[-a-zA-Z0-9]+')
+                ->name('course.show');
+        });
+
+        Route::put('/courses/{course}', [CourseController::class, 'updateCourse'])
+            ->where('course', '[0-9]+')
+            ->name('courses.update');
+
+        Route::delete('/courses/{course}', [CourseController::class, 'destroyCourse'])
+            ->where('course', '[0-9]+')
+            ->name('courses.destroy');
+
+        Route::post('/courses/create', [CourseController::class, 'createCourse'])
+            ->name('courses.create.create');
 
         Route::get('/admin/tasks', [AdminController::class, 'showTasksPage'])
             ->name('admin.tasks.show');

@@ -46,6 +46,8 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+        $user->sendEmailVerificationNotification();
+
         event(new AdminDashboardUpdated(
             'user',
             'Новый пользователь',
@@ -64,6 +66,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('home'));
+        return redirect()->route('verification.notice')
+            ->with('status', 'verification-link-sent');
     }
 }

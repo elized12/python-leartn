@@ -583,6 +583,20 @@ body {
     background: #fff7ed;
 }
 
+.users-table tr.is-verified {
+    background: #ecfdf5;
+}
+
+.status-badge.is-verified {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.is-unverified {
+    background: #fef9c3;
+    color: #92400e;
+}
+
 .user-cell {
     display: flex;
     align-items: center;

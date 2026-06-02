@@ -19,7 +19,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'showHomePage'])
     ->name('home');
 
-Route::middleware('auth')->group(function () {
+Route::get('/dashboard', [HomeController::class, 'showHomePage'])
+    ->name('dashboard');
+
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/notification/{notificationId}', [NotificationController::class, 'hiddenNotification'])
         ->where('notifacationId', '[0-9]+')->name('notification.hidden');
 

@@ -3,6 +3,7 @@
 use App\Console\Commands\InstallJudgePythonImage;
 use App\Console\Commands\InstallJudgePythonPandasImage;
 use App\Http\Middleware\CheckAdmin;
+use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\EnsureUserIsNotBlocked;
 use App\Http\Middleware\NotificationChecker;
 use Illuminate\Foundation\Application;
@@ -28,7 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => CheckAdmin::class,
-            'notification-checker' => NotificationChecker::class
+            'notification-checker' => NotificationChecker::class,
+            'verified' => EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

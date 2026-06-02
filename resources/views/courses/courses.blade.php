@@ -117,10 +117,10 @@
                         <a href="{{ route('courses.create.show') }}" class="btn primary-btn" style="margin-right: 15px;">
                             <i class="fas fa-plus"></i> Создать курс
                         </a>
+                        <a href="{{ route('courses.drafts.show') }}" class="btn outline-btn" style="margin-right: 15px;">
+                            <i class="fas fa-folder-open"></i> Черновики
+                        </a>
                     @endif
-                    <a href="{{ route('courses.drafts.show') }}" class="btn outline-btn" style="margin-right: 15px;">
-                        <i class="fas fa-folder-open"></i> Черновики
-                    </a>
                     <div class="search-box">
                         <i class="fas fa-search"></i>
                         <input type="text" placeholder="Поиск курсов...">

@@ -1,31 +1,58 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
-        </div>
-    @endif
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Подтверждение почты — Code master</title>
+    @vite(['resources/css/auth/login.css'])
+</head>
 
-    <div class="mt-4 flex items-center justify-between">
-        <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
-
+<body>
+    <main class="auth-shell">
+        <section class="auth-aside">
+            <a href="{{ route('home') }}" class="auth-logo">
+                <span><i class="fas fa-code"></i></span>
+                Code master
+            </a>
             <div>
-                <x-primary-button>
-                    {{ __('Resend Verification Email') }}
-                </x-primary-button>
+                <span class="auth-kicker">Проверка аккаунта</span>
+                <h1>Подтвердите вашу почту</h1>
+                <p>Мы отправили ссылку активации на указанный email. Проверьте почту и нажмите на ссылку, чтобы продолжить.</p>
             </div>
-        </form>
+        </section>
 
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
+        <section class="auth-card">
+            <div class="auth-card-header">
+                <span>Проверка электронной почты</span>
+                <h2>Подтвердите аккаунт</h2>
+                <p>Если письмо не пришло, вы можете отправить его повторно.</p>
+            </div>
 
-            <button type="submit" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                {{ __('Log Out') }}
-            </button>
-        </form>
-    </div>
-</x-guest-layout>
+            @if (session('status') == 'verification-link-sent')
+                <div class="auth-status">Новая ссылка подтверждения отправлена.</div>
+            @endif
+
+            <div class="auth-card-note">
+                <p>Ссылка на подтверждение отправлена на <strong>{{ auth()->user()->email }}</strong>. Проверьте, пожалуйста, входящие и папку «Спам».</p>
+            </div>
+
+            <div class="auth-form">
+                <form method="POST" action="{{ route('verification.send') }}">
+                    @csrf
+
+                    <button type="submit" class="submit-button">Отправить ссылку повторно</button>
+                </form>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+
+                    <button type="submit" class="submit-button secondary-button">Выйти</button>
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

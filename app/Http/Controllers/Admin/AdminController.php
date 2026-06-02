@@ -23,6 +23,7 @@ class AdminController extends Controller
         return view('admin.main', [
             'tasksCount' => Task::count(),
             'usersCount' => User::count(),
+            'verifiedUsersCount' => User::whereNotNull('email_verified_at')->count(),
             'coursesCount' => Course::count(),
             'completedTasksCount' => Attempt::where('status', TaskStatus::COMPLETED->value)->count(),
             'attemptsTodayCount' => Attempt::whereDate('created_at', today())->count(),

@@ -16,6 +16,13 @@
                     <h1>{{ $user->name }}</h1>
                     <p>Здесь видно прогресс по задачам и курсам, к которым подключился пользователь.</p>
                 </div>
+
+                @if(auth()->check() && auth()->id() === $user->id)
+                    <form method="POST" action="{{ route('logout') }}" class="profile-logout-form">
+                        @csrf
+                        <button type="submit" class="btn btn-secondary">Выйти</button>
+                    </form>
+                @endif
             </div>
 
             <div class="profile-stats">

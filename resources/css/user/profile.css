@@ -29,6 +29,15 @@
     min-width: 0;
 }
 
+.profile-logout-form {
+    margin-left: auto;
+}
+
+.profile-logout-form .btn {
+    min-height: 42px;
+    padding: 0 18px;
+}
+
 .profile-avatar {
     width: 82px;
     height: 82px;

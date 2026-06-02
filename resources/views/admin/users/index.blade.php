@@ -28,6 +28,10 @@
             <span class="stat-label">Всего пользователей</span>
             <strong>{{ $usersCount }}</strong>
         </div>
+        <div class="stat-card accent-green">
+            <span class="stat-label">Подтверждённые</span>
+            <strong>{{ $verifiedCount }}</strong>
+        </div>
         <div class="stat-card accent-amber">
             <span class="stat-label">Заблокировано</span>
             <strong>{{ $blockedCount }}</strong>
@@ -65,6 +69,7 @@
                 <th>ID</th>
                 <th>Пользователь</th>
                 <th>Роль</th>
+                <th>Подтверждён</th>
                 <th>Статус</th>
                 <th>Регистрация</th>
                 <th>Действия</th>
@@ -72,7 +77,7 @@
         </thead>
         <tbody>
             @forelse($users as $user)
-                <tr class="{{ $user->is_blocked ? 'is-blocked' : '' }}">
+                <tr class="{{ $user->is_blocked ? 'is-blocked' : ($user->email_verified_at ? 'is-verified' : '') }}">
                     <td>{{ $user->id }}</td>
                     <td>
                         <div class="user-cell">
@@ -86,6 +91,11 @@
                     <td>
                         <span class="status-badge {{ $user->is_admin ? 'is-admin' : '' }}">
                             {{ $user->is_admin ? 'Админ' : 'Пользователь' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge {{ $user->email_verified_at ? 'is-verified' : 'is-unverified' }}">
+                            {{ $user->email_verified_at ? 'Да' : 'Нет' }}
                         </span>
                     </td>
                     <td>

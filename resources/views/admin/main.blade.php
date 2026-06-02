@@ -29,6 +29,11 @@
             <small>зарегистрировано всего</small>
         </article>
         <article class="stat-card accent-green">
+            <span class="stat-label">Подтверждённые</span>
+            <strong data-stat="verified_users">{{ $verifiedUsersCount ?? 0 }}</strong>
+            <small>подтвердили email</small>
+        </article>
+        <article class="stat-card accent-green">
             <span class="stat-label">Задачи</span>
             <strong data-stat="tasks">{{ $tasksCount ?? 0 }}</strong>
             <small>доступно в системе</small>

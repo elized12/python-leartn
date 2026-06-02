@@ -35,6 +35,7 @@ class UserController extends Controller
             'search' => $search,
             'status' => $status,
             'usersCount' => User::count(),
+            'verifiedCount' => User::whereNotNull('email_verified_at')->count(),
             'blockedCount' => User::where('is_blocked', true)->count(),
             'adminsCount' => User::where('is_admin', true)->count(),
         ]);

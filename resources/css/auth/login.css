@@ -258,6 +258,26 @@ body {
     transition: transform 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
 }
 
+.secondary-button {
+    background: transparent;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+
+.secondary-button:hover {
+    background: #f8fafc;
+}
+
+.auth-card-note {
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    line-height: 1.8;
+}
+
 .submit-button:hover {
     background: #1f2937;
     box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);

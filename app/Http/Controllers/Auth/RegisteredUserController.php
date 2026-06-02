@@ -54,7 +54,7 @@ class RegisteredUserController extends Controller
             
             return redirect()->route('register')
                 ->withInput($request->only('name', 'email'))
-                ->with('error', 'Ошибка отправки письма верификации. Пожалуйста, попробуйте позже.');
+                ->with('error', 'Ошибка отправки письма. Проверьте введённые данные.');
         }
 
         event(new AdminDashboardUpdated(

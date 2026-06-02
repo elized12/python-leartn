@@ -162,6 +162,16 @@ body {
     font-weight: 700;
 }
 
+.auth-error {
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 700;
+}
+
 .auth-form {
     display: grid;
     gap: 16px;

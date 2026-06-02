@@ -45,8 +45,17 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($user));
-        $user->sendEmailVerificationNotification();
+        try {
+            event(new Registered($user));
+            $user->sendEmailVerificationNotification();
+        } catch (\Exception $e) {
+            // Удаляем пользователя если не удалось отправить письмо
+            $user->delete();
+            
+            return redirect()->route('register')
+                ->withInput($request->only('name', 'email'))
+                ->with('error', 'Ошибка отправки письма верификации. Пожалуйста, попробуйте позже.');
+        }
 
         event(new AdminDashboardUpdated(
             'user',

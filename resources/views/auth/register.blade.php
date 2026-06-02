@@ -39,6 +39,10 @@
                 <div class="auth-status">{{ session('status') }}</div>
             @endif
 
+            @if (session('error'))
+                <div class="auth-error">{{ session('error') }}</div>
+            @endif
+
             <form method="POST" action="{{ route('register') }}" class="auth-form">
                 @csrf
 

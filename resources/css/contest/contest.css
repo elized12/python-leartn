@@ -5,8 +5,10 @@
 }
 
 .contest-hero {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background:
+        linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(20, 184, 166, 0.08)),
+        #ffffff;
+    border: 1px solid #dbe3ef;
     border-radius: 12px;
     padding: 24px;
     display: flex;
@@ -16,9 +18,15 @@
     margin-bottom: 22px;
 }
 
+.contest-hero-waiting {
+    margin-bottom: 16px;
+}
+
 .contest-hero h1 {
     margin: 8px 0;
     color: #111827;
+    font-size: 34px;
+    line-height: 1.1;
 }
 
 .contest-hero p {
@@ -47,6 +55,67 @@
     color: #4338ca;
     font-weight: 800;
     font-size: 12px;
+}
+
+.contest-countdown-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 22px;
+    padding: 22px;
+    border: 1px solid #dbe3ef;
+    border-radius: 12px;
+    background: #0f172a;
+    color: #ffffff;
+}
+
+.contest-countdown-copy h2 {
+    margin: 8px 0;
+    font-size: 26px;
+    line-height: 1.15;
+}
+
+.contest-countdown-copy p {
+    margin: 0;
+    color: #cbd5e1;
+}
+
+.contest-countdown-eyebrow {
+    display: inline-flex;
+    color: #67e8f9;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.contest-countdown-clock {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(72px, 1fr));
+    gap: 10px;
+}
+
+.contest-countdown-clock div {
+    min-height: 96px;
+    padding: 14px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    display: grid;
+    place-items: center;
+}
+
+.contest-countdown-clock strong {
+    display: block;
+    font-size: 34px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.contest-countdown-clock span {
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 700;
 }
 
 .contest-primary-button,
@@ -130,6 +199,75 @@
     gap: 12px;
 }
 
+.contest-locked-tasks {
+    padding: 28px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    background:
+        linear-gradient(135deg, rgba(15, 23, 42, 0.04), rgba(20, 184, 166, 0.06)),
+        #ffffff;
+    text-align: center;
+}
+
+.contest-lock-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 12px;
+    border-radius: 12px;
+    background: #eef2ff;
+    color: #4f46e5;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+}
+
+.contest-locked-tasks h3 {
+    margin: 0 0 8px;
+    color: #111827;
+}
+
+.contest-locked-tasks p {
+    max-width: 520px;
+    margin: 0 auto;
+    color: #64748b;
+}
+
+.contest-locked-preview {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.contest-locked-preview span {
+    height: 46px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #e2e8f0, #f8fafc, #e2e8f0);
+    background-size: 200% 100%;
+    animation: contestLockedPulse 1.8s ease-in-out infinite;
+}
+
+.contest-locked-preview span:nth-child(2) {
+    width: 88%;
+    margin: 0 auto;
+    animation-delay: 0.12s;
+}
+
+.contest-locked-preview span:nth-child(3) {
+    width: 76%;
+    margin: 0 auto;
+    animation-delay: 0.24s;
+}
+
+@keyframes contestLockedPulse {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
 .contest-task-row,
 .contest-leader-row,
 .contest-attempt-row {
@@ -202,11 +340,37 @@
 
 @media (max-width: 900px) {
     .contest-hero,
-    .contest-layout {
+    .contest-layout,
+    .contest-countdown-panel {
         grid-template-columns: 1fr;
     }
 
     .contest-hero {
         flex-direction: column;
+    }
+
+    .contest-countdown-clock {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .contest-page {
+        width: min(100% - 20px, 1180px);
+        padding-top: 18px;
+    }
+
+    .contest-hero h1 {
+        font-size: 26px;
+    }
+
+    .contest-countdown-panel,
+    .contest-hero,
+    .contest-panel {
+        padding: 16px;
+    }
+
+    .contest-countdown-clock strong {
+        font-size: 28px;
     }
 }

@@ -8,4 +8,5 @@ return [
     'wall_timeout_grace_s' => (int) env('JUDGE_WALL_TIMEOUT_GRACE_S', 10),
     'min_wall_timeout_s' => (int) env('JUDGE_MIN_WALL_TIMEOUT_S', 30),
     'output_limit_bytes' => (int) env('JUDGE_OUTPUT_LIMIT_BYTES', 1048576),
+    'memory_overhead_mb' => (int) env('JUDGE_MEMORY_OVERHEAD_MB', 32),
 ];

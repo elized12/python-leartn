@@ -30,36 +30,46 @@ class ContestController extends Controller
     {
         abort_unless($contest->is_active || Auth::user()?->is_admin, 404);
 
-        $contest->load('tasks');
+        $isStarted = $contest->isStarted();
+        $isRunning = $contest->isRunning();
         $isParticipant = Auth::check()
             && ContestParticipant::where('contest_id', $contest->id)->where('user_id', Auth::id())->exists();
 
-        $leaderboard = DB::table('attempt_solution as a')
-            ->join('users as u', 'u.id', '=', 'a.user_id')
-            ->where('a.status', TaskStatus::COMPLETED->value)
-            ->where('a.contest_id', $contest->id)
-            ->select('u.id', 'u.name', DB::raw('COUNT(DISTINCT a.task_id) as solved'))
-            ->groupBy('u.id', 'u.name')
-            ->orderByDesc('solved')
-            ->orderByRaw('MIN(a.created_at) asc')
-            ->limit(10)
-            ->get();
+        $leaderboard = $isStarted
+            ? DB::table('attempt_solution as a')
+                ->join('users as u', 'u.id', '=', 'a.user_id')
+                ->where('a.status', TaskStatus::COMPLETED->value)
+                ->where('a.contest_id', $contest->id)
+                ->select('u.id', 'u.name', DB::raw('COUNT(DISTINCT a.task_id) as solved'))
+                ->groupBy('u.id', 'u.name')
+                ->orderByDesc('solved')
+                ->orderByRaw('MIN(a.created_at) asc')
+                ->limit(10)
+                ->get()
+            : collect();
 
         return view('contest.show', [
             'contest' => $contest,
-            'tasks' => $contest->tasks()->where('is_public', true)->get(),
+            'tasks' => $isStarted ? $contest->tasks()->where('is_public', true)->get() : collect(),
             'leaderboard' => $leaderboard,
             'isParticipant' => $isParticipant,
-            'recentAttempts' => Attempt::query()
-                ->with(['user', 'task'])
-                ->where('contest_id', $contest->id)
-                ->latest()
-                ->limit(20)
-                ->get(),
-            'onlineAttempts' => Attempt::query()
-                ->where('contest_id', $contest->id)
-                ->where('created_at', '>=', now()->subMinutes(15))
-                ->count(),
+            'isStarted' => $isStarted,
+            'isRunning' => $isRunning,
+            'startsAtIso' => $contest->starts_at?->toIso8601String(),
+            'recentAttempts' => $isStarted
+                ? Attempt::query()
+                    ->with(['user', 'task'])
+                    ->where('contest_id', $contest->id)
+                    ->latest()
+                    ->limit(20)
+                    ->get()
+                : collect(),
+            'onlineAttempts' => $isStarted
+                ? Attempt::query()
+                    ->where('contest_id', $contest->id)
+                    ->where('created_at', '>=', now()->subMinutes(15))
+                    ->count()
+                : 0,
             'durationHours' => $contest->starts_at && $contest->ends_at
                 ? max(1, (int) ceil($contest->starts_at->diffInHours($contest->ends_at, false)))
                 : 0,

@@ -64,6 +64,7 @@ class CodeJudgeService
                 $errorOutput = $solutionProcess->getErrorOutput();
                 $executionTimeS = $this->extractCpuTimeS($errorOutput) ?? 0.0;
                 $maxExecutionTimeS = max($maxExecutionTimeS, $executionTimeS);
+                $taskMemoryLimitMb = $solutionRun['task_memory_limit_mb'] ?? $this->taskMemoryLimitMb($task);
                 $peakMemoryUsageMb = max(
                     $peakMemoryUsageMb ?? 0,
                     $solutionRun['peak_memory_usage_mb'] ?? 0,
@@ -71,6 +72,14 @@ class CodeJudgeService
                 ) ?: $peakMemoryUsageMb;
 
                 $status = $this->statusFromProcess($solutionProcess, $errorOutput);
+                if ($status === TaskStatus::COMPLETED && $peakMemoryUsageMb !== null && $peakMemoryUsageMb > $taskMemoryLimitMb) {
+                    $status = TaskStatus::MEMORY_LIMIT;
+                }
+
+                if ($status === TaskStatus::MEMORY_LIMIT && $peakMemoryUsageMb !== null && $peakMemoryUsageMb <= $taskMemoryLimitMb) {
+                    $peakMemoryUsageMb = $taskMemoryLimitMb + 1;
+                }
+
                 if ($status !== TaskStatus::COMPLETED) {
                     return new JudgeRunResult(
                         $status,
@@ -207,7 +216,9 @@ class CodeJudgeService
         $workspacePath = Storage::path($workspace);
         $this->makeWorkspaceWritable($workspacePath);
 
-        $memoryLimit = max(64, (int) ($task->memory_limit_mb ?: 128)) . 'm';
+        $taskMemoryLimitMb = $this->taskMemoryLimitMb($task);
+        $dockerMemoryLimitMb = $taskMemoryLimitMb + max(0, (int) config('judge.memory_overhead_mb', 32));
+        $memoryLimit = "{$dockerMemoryLimitMb}m";
         $cpuLimit = max(1, (int) ceil($timeLimitS));
         $outputLimitBytes = max(1024, (int) config('judge.output_limit_bytes', 1048576));
         $wallTimeout = $this->wallTimeoutForCpuLimit($cpuLimit);
@@ -273,7 +284,13 @@ class CodeJudgeService
         return [
             'process' => $process,
             'peak_memory_usage_mb' => $peakMemoryUsageMb,
+            'task_memory_limit_mb' => $taskMemoryLimitMb,
         ];
+    }
+
+    private function taskMemoryLimitMb(Task $task): int
+    {
+        return max(64, (int) ($task->memory_limit_mb ?: 128));
     }
 
     private function dockerUser(): ?string

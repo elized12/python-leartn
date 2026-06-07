@@ -98,12 +98,17 @@ PROMPT;
                     'temperature' => config('ollama.temperature', 0.2),
                     'num_predict' => config('ollama.num_predict', 550),
                     'num_ctx' => config('ollama.num_ctx', 8192),
-                    'keep_alive' => config('ollama.keep_alive', '5m'),
                 ],
                 (array) ($template->parameters ?? [])
             ),
-            static fn($value) => $value !== null && $value !== ''
+            static fn($value, $key) => $value !== null && $value !== '' && $key !== 'keep_alive',
+            ARRAY_FILTER_USE_BOTH
         );
+    }
+
+    public function keepAlive(): string
+    {
+        return (string) config('ollama.keep_alive', '5m');
     }
 
     public function saveModel(string $model): void
@@ -263,11 +268,11 @@ PROMPT;
                     'temperature' => config('ollama.temperature', 0.2),
                     'num_predict' => config('ollama.num_predict', 550),
                     'num_ctx' => config('ollama.num_ctx', 8192),
-                    'keep_alive' => config('ollama.keep_alive', '5m'),
                 ],
                 $options
             ),
-            static fn($value) => $value !== null && $value !== ''
+            static fn($value, $key) => $value !== null && $value !== '' && $key !== 'keep_alive',
+            ARRAY_FILTER_USE_BOTH
         );
     }
 

@@ -30,7 +30,7 @@ class AiHintService
             ->post(config('ollama.url'), $this->payload($task, $attempt, false));
 
         if (!$response->successful()) {
-            throw new RuntimeException('Ollama не смогла сформировать подсказку. Проверьте, что сервер и модель запущены.');
+            throw new RuntimeException($this->ollamaErrorMessage($response->status(), $response->body()));
         }
 
         $content = trim((string) data_get($response->json(), 'message.content', ''));
@@ -52,6 +52,7 @@ class AiHintService
 
         $client = new Client([
             'timeout' => (int) config('ollama.timeout', 120),
+            'http_errors' => false,
         ]);
 
         $response = $client->post(config('ollama.url'), [
@@ -63,7 +64,7 @@ class AiHintService
         ]);
 
         if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
-            throw new RuntimeException('Ollama не смогла сформировать подсказку. Проверьте, что сервер и модель запущены.');
+            throw new RuntimeException($this->ollamaErrorMessage($response->getStatusCode(), (string) $response->getBody()));
         }
 
         $body = $response->getBody();
@@ -104,6 +105,7 @@ class AiHintService
         return [
             'model' => $this->ollamaSettings->currentModel(),
             'stream' => $stream,
+            'keep_alive' => $this->ollamaSettings->keepAlive(),
             'messages' => [
                 [
                     'role' => 'system',
@@ -116,6 +118,15 @@ class AiHintService
             ],
             'options' => $this->ollamaSettings->currentOptions(),
         ];
+    }
+
+    private function ollamaErrorMessage(int $statusCode, string $body): string
+    {
+        $error = data_get(json_decode($body, true) ?: [], 'error');
+
+        return $error
+            ? "Ollama вернула ошибку {$statusCode}: {$error}"
+            : "Ollama вернула ошибку {$statusCode}. Проверьте, что сервер и модель запущены.";
     }
 
     private function userPrompt(Task $task, Attempt $attempt, string $template): string

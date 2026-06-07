@@ -55,7 +55,7 @@ class KnowledgeTracingServiceTest extends TestCase
         $this->assertLessThanOrEqual(1, $mastery->probability);
     }
 
-    public function test_repeated_attempt_for_same_task_does_not_change_probability_again(): void
+    public function test_attempts_change_probability_until_first_accepted_solution(): void
     {
         [$user, $task, $category] = $this->userTaskAndCategory();
 
@@ -67,17 +67,52 @@ class KnowledgeTracingServiceTest extends TestCase
             ->where('category_id', $category->id)
             ->value('probability');
 
-        $secondAttempt = $this->attempt($user, $task, TaskStatus::COMPLETED);
+        $secondAttempt = $this->attempt($user, $task, TaskStatus::INCORRECT_RESULT);
         app(KnowledgeTracingService::class)->updateFromAttempt($secondAttempt);
 
+        $probabilityAfterSecondAttempt = UserCategoryMastery::query()
+            ->where('user_id', $user->id)
+            ->where('category_id', $category->id)
+            ->value('probability');
+
+        $this->assertLessThan($probabilityAfterFirstAttempt, $probabilityAfterSecondAttempt);
+        $this->assertNotNull($secondAttempt->fresh()->knowledge_traced_at);
+
+        $acceptedAttempt = $this->attempt($user, $task, TaskStatus::COMPLETED);
+        app(KnowledgeTracingService::class)->updateFromAttempt($acceptedAttempt);
+
+        $probabilityAfterAcceptedAttempt = UserCategoryMastery::query()
+            ->where('user_id', $user->id)
+            ->where('category_id', $category->id)
+            ->value('probability');
+
+        $this->assertGreaterThan($probabilityAfterSecondAttempt, $probabilityAfterAcceptedAttempt);
+        $this->assertNotNull($acceptedAttempt->fresh()->knowledge_traced_at);
+    }
+
+    public function test_attempt_after_accepted_solution_does_not_change_probability_again(): void
+    {
+        [$user, $task, $category] = $this->userTaskAndCategory();
+
+        $acceptedAttempt = $this->attempt($user, $task, TaskStatus::COMPLETED);
+        app(KnowledgeTracingService::class)->updateFromAttempt($acceptedAttempt);
+
+        $probabilityAfterAcceptedAttempt = UserCategoryMastery::query()
+            ->where('user_id', $user->id)
+            ->where('category_id', $category->id)
+            ->value('probability');
+
+        $nextAttempt = $this->attempt($user, $task, TaskStatus::INCORRECT_RESULT);
+        app(KnowledgeTracingService::class)->updateFromAttempt($nextAttempt);
+
         $this->assertSame(
-            (float) $probabilityAfterFirstAttempt,
+            (float) $probabilityAfterAcceptedAttempt,
             (float) UserCategoryMastery::query()
                 ->where('user_id', $user->id)
                 ->where('category_id', $category->id)
                 ->value('probability')
         );
-        $this->assertNotNull($secondAttempt->fresh()->knowledge_traced_at);
+        $this->assertNotNull($nextAttempt->fresh()->knowledge_traced_at);
     }
 
     private function userTaskAndCategory(): array

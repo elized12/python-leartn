@@ -27,7 +27,7 @@ class KnowledgeTracingService
                 return;
             }
 
-            if ($this->hasAlreadyTracedTask($attempt)) {
+            if ($this->hasAlreadyTracedAcceptedTask($attempt)) {
                 $attempt->forceFill(['knowledge_traced_at' => now()])->save();
                 return;
             }
@@ -174,12 +174,13 @@ class KnowledgeTracingService
         return round(max(0, min(1, $updated)), 4);
     }
 
-    private function hasAlreadyTracedTask(Attempt $attempt): bool
+    private function hasAlreadyTracedAcceptedTask(Attempt $attempt): bool
     {
         return Attempt::query()
             ->where('user_id', $attempt->user_id)
             ->where('task_id', $attempt->task_id)
             ->whereKeyNot($attempt->id)
+            ->where('status', TaskStatus::COMPLETED->value)
             ->whereNotNull('knowledge_traced_at')
             ->exists();
     }

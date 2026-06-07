@@ -9,4 +9,6 @@ return [
     'min_wall_timeout_s' => (int) env('JUDGE_MIN_WALL_TIMEOUT_S', 30),
     'output_limit_bytes' => (int) env('JUDGE_OUTPUT_LIMIT_BYTES', 1048576),
     'memory_overhead_mb' => (int) env('JUDGE_MEMORY_OVERHEAD_MB', 32),
+    'cpu_shares' => (int) env('JUDGE_CPU_SHARES', 2048),
+    'nice' => env('JUDGE_NICE'),
 ];

@@ -4,12 +4,10 @@ namespace App\Service\Task;
 
 use App\Models\Task\File as TaskFile;
 use App\Models\Task\Task;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessTimedOutException;
 
 class CodeJudgeService
 {
@@ -67,7 +65,6 @@ class CodeJudgeService
                 $taskMemoryLimitMb = $solutionRun['task_memory_limit_mb'] ?? $this->taskMemoryLimitMb($task);
                 $peakMemoryUsageMb = max(
                     $peakMemoryUsageMb ?? 0,
-                    $solutionRun['peak_memory_usage_mb'] ?? 0,
                     $this->extractPeakMemoryUsageMb($errorOutput) ?? 0
                 ) ?: $peakMemoryUsageMb;
 
@@ -220,6 +217,7 @@ class CodeJudgeService
         $dockerMemoryLimitMb = $taskMemoryLimitMb + max(0, (int) config('judge.memory_overhead_mb', 32));
         $memoryLimit = "{$dockerMemoryLimitMb}m";
         $cpuLimit = max(1, (int) ceil($timeLimitS));
+        $cpuShares = max(2, (int) config('judge.cpu_shares', 2048));
         $outputLimitBytes = max(1024, (int) config('judge.output_limit_bytes', 1048576));
         $wallTimeout = $this->wallTimeoutForCpuLimit($cpuLimit);
         $containerName = 'judge_' . str_replace('-', '', Str::uuid()->toString());
@@ -236,6 +234,7 @@ class CodeJudgeService
             "--memory={$memoryLimit}",
             "--memory-swap={$memoryLimit}",
             '--cpus=1',
+            "--cpu-shares={$cpuShares}",
             '--pids-limit=64',
             '--network=none',
             '--cap-drop=ALL',
@@ -249,18 +248,32 @@ class CodeJudgeService
             $command[] = $dockerUser;
         }
 
-        array_push(
-            $command,
-            $task->environment->docker_image_name,
+        $runtimeCommand = [
             '/usr/bin/time',
             '-f',
-            "__JUDGE_USER_TIME_S__:%U\n__JUDGE_SYSTEM_TIME_S__:%S\n__JUDGE_ELAPSED_TIME_S__:%e\n__JUDGE_PEAK_MEMORY_KB__:%M",
+            "__JUDGE_USER_TIME_S__:%U\n__JUDGE_SYSTEM_TIME_S__:%S\n__JUDGE_ELAPSED_TIME_S__:%e",
             'python3',
             'judge_runner.py',
             (string) $cpuLimit,
             (string) $outputLimitBytes,
             $entrypoint,
             ...$arguments,
+        ];
+
+        $nice = config('judge.nice');
+        if ($nice !== null && $nice !== '') {
+            array_unshift(
+                $runtimeCommand,
+                'nice',
+                '-n',
+                (string) max(-20, min(19, (int) $nice))
+            );
+        }
+
+        array_push(
+            $command,
+            $task->environment->docker_image_name,
+            ...$runtimeCommand,
         );
 
         $process = new Process($command);
@@ -268,22 +281,10 @@ class CodeJudgeService
         $process->setInput($input);
         $process->setTimeout($wallTimeout);
         $process->start();
-
-        $peakMemoryUsageMb = null;
-        while ($process->isRunning()) {
-            $currentMemoryUsageMb = $this->readContainerMemoryUsageMb($containerName);
-            if ($currentMemoryUsageMb !== null) {
-                $peakMemoryUsageMb = max($peakMemoryUsageMb ?? 0, $currentMemoryUsageMb);
-            }
-
-            usleep(50_000);
-        }
-
         $process->wait();
 
         return [
             'process' => $process,
-            'peak_memory_usage_mb' => $peakMemoryUsageMb,
             'task_memory_limit_mb' => $taskMemoryLimitMb,
         ];
     }
@@ -372,56 +373,6 @@ class CodeJudgeService
                 @chmod($path, 0755);
             }
         }
-    }
-
-    private function readContainerMemoryUsageMb(string $containerName): ?int
-    {
-        $statsProcess = new Process([
-            'docker',
-            'stats',
-            '--no-stream',
-            '--format',
-            '{{.MemUsage}}',
-            $containerName,
-        ]);
-        $statsProcess->setTimeout(5);
-
-        try {
-            $statsProcess->run();
-        } catch (ProcessTimedOutException) {
-            Log::debug('Docker stats timed out while measuring memory usage', [
-                'container' => $containerName,
-            ]);
-
-            return null;
-        }
-
-        if (!$statsProcess->isSuccessful()) {
-            return null;
-        }
-
-        return $this->parseDockerMemoryUsageMb($statsProcess->getOutput());
-    }
-
-    private function parseDockerMemoryUsageMb(string $value): ?int
-    {
-        if (!preg_match('/([\d.]+)\s*([KMGT]?i?B)\s*\/?/i', trim($value), $matches)) {
-            return null;
-        }
-
-        $amount = (float) $matches[1];
-        $unit = strtolower($matches[2]);
-
-        $mb = match ($unit) {
-            'b' => $amount / 1024 / 1024,
-            'kb', 'kib' => $amount / 1024,
-            'mb', 'mib' => $amount,
-            'gb', 'gib' => $amount * 1024,
-            'tb', 'tib' => $amount * 1024 * 1024,
-            default => null,
-        };
-
-        return $mb === null ? null : (int) ceil($mb);
     }
 
     private function extractPeakMemoryUsageMb(string $errorOutput): ?int
@@ -522,7 +473,6 @@ try:
         exit_code = completed_return_code
 finally:
     usage = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-    usage = max(usage, resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
     print(f"__JUDGE_PEAK_MEMORY_KB__:{usage}", file=sys.stderr)
 
 sys.exit(exit_code)

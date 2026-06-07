@@ -84,10 +84,14 @@
                 @else
                     <div class="contest-task-list">
                         @forelse($tasks as $task)
-                            <div class="contest-task-row">
+                            @php($isSolvedInContest = in_array((int) $task->id, $solvedTaskIds, true))
+                            <div class="contest-task-row {{ $isSolvedInContest ? 'solved' : '' }}">
                                 <div>
                                     <h3>{{ $task->title }}</h3>
                                     <span>Рейтинг {{ $task->rating }}</span>
+                                    @if($isSolvedInContest)
+                                        <span class="contest-task-solved-badge"><i class="fas fa-check"></i> Решена</span>
+                                    @endif
                                 </div>
                                 @if($isRunning && $isParticipant)
                                     <a href="{{ route('contests.task', ['contest' => $contest, 'task' => $task]) }}">Решать</a>

@@ -375,13 +375,13 @@ class CodeJudgeService
         }
     }
 
-    private function extractPeakMemoryUsageMb(string $errorOutput): ?int
+    private function extractPeakMemoryUsageMb(string $errorOutput): ?float
     {
         if (!preg_match('/__JUDGE_PEAK_MEMORY_KB__:(\d+)/', $errorOutput, $matches)) {
             return null;
         }
 
-        return (int) ceil(((int) $matches[1]) / 1024);
+        return round(((int) $matches[1]) / 1024, 1);
     }
 
     private function extractCpuTimeS(string $errorOutput): ?float

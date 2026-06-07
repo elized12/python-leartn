@@ -27,7 +27,9 @@ class Attempt extends Model
     ];
 
     protected $casts = [
-        'status' => TaskStatus::class
+        'status' => TaskStatus::class,
+        'peak_memory_usage_mb' => 'float',
+        'execution_time_s' => 'float',
     ];
 
     public function user()

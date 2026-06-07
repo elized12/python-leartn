@@ -226,6 +226,15 @@ function csrfToken() {
         || '';
 }
 
+function formatMemoryMb(value) {
+    if (value === null || value === undefined || value === '—') {
+        return '—';
+    }
+
+    const number = Number(value);
+    return Number.isFinite(number) ? number.toFixed(1) : '—';
+}
+
 const aiHintCache = new Map();
 const aiHintPendingAttempts = new Map();
 let currentAiHintRequest = null;
@@ -725,7 +734,7 @@ function addAttemptToList(attempt) {
 
     const statusText = isSuccess ? 'Accepted' : attempt.status;
     const time = attempt.execution_time_s ?? '—';
-    const memory = attempt.peak_memory_usage_mb ?? '—';
+    const memory = formatMemoryMb(attempt.peak_memory_usage_mb);
 
     item.innerHTML = `
         <div>
@@ -792,7 +801,7 @@ function createResultOutput({ type, title, subtitle, description, time, memory }
             </div>
             <div class="result-metrics">
                 <span><b>Время</b>${escapeHtml(time ?? '—')} сек.</span>
-                <span><b>Память</b>${escapeHtml(memory ?? '—')} МБ</span>
+                <span><b>Память</b>${escapeHtml(formatMemoryMb(memory))} МБ</span>
             </div>
             ${description ? `<div class="result-message">${escapeHtml(description)}</div>` : ''}
         </div>

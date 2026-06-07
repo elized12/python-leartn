@@ -4,6 +4,10 @@
     @vite(['resources/css/user/profile.css'])
 @endpush
 
+@php
+    $formatMemoryMb = fn($value) => $value === null ? '—' : number_format((float) $value, 1, '.', '');
+@endphp
+
 @section('content')
     <div class="profile-page">
         <section class="profile-hero">
@@ -223,7 +227,7 @@
                             </div>
                             <div class="task-result-meta">
                                 <strong>{{ $attempt->created_at?->format('d.m.Y') }}</strong>
-                                <span>{{ $attempt->execution_time_s ?? '—' }} сек. · {{ $attempt->peak_memory_usage_mb ?? '—' }} МБ</span>
+                                <span>{{ $attempt->execution_time_s ?? '—' }} сек. · {{ $formatMemoryMb($attempt->peak_memory_usage_mb) }} МБ</span>
                             </div>
                         </article>
                     @endforeach

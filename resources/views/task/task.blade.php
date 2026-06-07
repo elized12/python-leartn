@@ -26,6 +26,8 @@
             $levelTask = 'Профессионал';
             $classTask = 'hard';
         }
+
+        $formatMemoryMb = fn($value) => $value === null ? '—' : number_format((float) $value, 1, '.', '');
     @endphp
 
     <div class="solve-celebration" aria-hidden="true">
@@ -265,7 +267,7 @@
                                 <p>{{ $attempt->description }}</p>
                                 <div class="attempt-metrics">
                                     <span>{{ $attempt->execution_time_s ?? '—' }} сек.</span>
-                                    <span>{{ $attempt->peak_memory_usage_mb ?? '—' }} МБ</span>
+                                    <span>{{ $formatMemoryMb($attempt->peak_memory_usage_mb) }} МБ</span>
                                 </div>
                             </article>
                         @empty
@@ -295,7 +297,7 @@
                                             <span>{{ $attempt->execution_time_s }} сек.</span>
                                         </div>
                                         <div class="attempt-metrics">
-                                            <span>{{ $attempt->peak_memory_usage_mb ?? '—' }} МБ</span>
+                                            <span>{{ $formatMemoryMb($attempt->peak_memory_usage_mb) }} МБ</span>
                                             <span>{{ $attempt->created_at->format('d.m.Y H:i') }}</span>
                                         </div>
                                         <details>
@@ -319,7 +321,7 @@
                                     <article class="leaderboard-item">
                                         <div class="leaderboard-meta">
                                             <strong><span class="rank-badge">{{ $loop->iteration }}</span>{{ $attempt->user?->name ?? 'Пользователь' }}</strong>
-                                            <span>{{ $attempt->peak_memory_usage_mb }} МБ</span>
+                                            <span>{{ $formatMemoryMb($attempt->peak_memory_usage_mb) }} МБ</span>
                                         </div>
                                         <div class="attempt-metrics">
                                             <span>{{ $attempt->execution_time_s ?? '—' }} сек.</span>

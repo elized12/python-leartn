@@ -7,6 +7,7 @@ use App\Models\Task\Contest;
 use App\Models\Task\ContestParticipant;
 use App\Models\Task\Task;
 use App\Service\Contest\ContestLeaderboardService;
+use App\Service\Task\TaskStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -49,6 +50,15 @@ class ContestController extends Controller
         $isRunning = $contest->isRunning();
         $isParticipant = Auth::check()
             && ContestParticipant::where('contest_id', $contest->id)->where('user_id', Auth::id())->exists();
+        $solvedTaskIds = $isStarted && Auth::check()
+            ? Attempt::query()
+                ->where('contest_id', $contest->id)
+                ->where('user_id', Auth::id())
+                ->where('status', TaskStatus::COMPLETED->value)
+                ->pluck('task_id')
+                ->map(fn($taskId) => (int) $taskId)
+                ->all()
+            : [];
 
         $leaderboard = $isStarted
             ? $leaderboardService->leaderboard($contest->id, 20)
@@ -61,6 +71,7 @@ class ContestController extends Controller
             'isParticipant' => $isParticipant,
             'isStarted' => $isStarted,
             'isRunning' => $isRunning,
+            'solvedTaskIds' => $solvedTaskIds,
             'startsAtIso' => $contest->starts_at?->toIso8601String(),
             'recentAttempts' => $isStarted
                 ? Attempt::query()

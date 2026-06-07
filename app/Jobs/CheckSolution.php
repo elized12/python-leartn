@@ -146,7 +146,7 @@ class CheckSolution implements ShouldQueue
         TaskStatus $status,
         string $description,
         ?float $executonTime = null,
-        ?int $executionMemory = null,
+        ?float $executionMemory = null,
         ?string $code = null,
         ?int $contestId = null
     ): Attempt {

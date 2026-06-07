@@ -49,7 +49,6 @@ class RegisteredUserController extends Controller
             event(new Registered($user));
             $user->sendEmailVerificationNotification();
         } catch (\Exception $e) {
-            // Удаляем пользователя если не удалось отправить письмо
             $user->delete();
             
             return redirect()->route('register')

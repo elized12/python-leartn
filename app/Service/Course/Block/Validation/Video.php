@@ -2,7 +2,7 @@
 
 namespace App\Service\Course\Block\Validation;
 
-class Video
+class Video implements BlockValidatorInterface
 {
     private const ALLOWED_PLATFORMS = ['youtube', 'vimeo', 'upload'];
     private const ALLOWED_WIDTHS = ['100%', '80%', '60%'];

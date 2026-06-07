@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\ContestController as AdminContestController;
 use App\Http\Controllers\Admin\Task\TaskController as AdminTaskController;
 use App\Http\Controllers\Admin\Task\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\Task\EnvironmentController as AdminEnvironmentController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AiSettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\ContestController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
@@ -25,6 +27,14 @@ Route::get('/dashboard', [HomeController::class, 'showHomePage'])
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/notification/{notificationId}', [NotificationController::class, 'hiddenNotification'])
         ->where('notifacationId', '[0-9]+')->name('notification.hidden');
+
+    Route::post('/contest/{contest}/join', [ContestController::class, 'join'])
+        ->where('contest', '[0-9]+')
+        ->name('contests.join');
+
+    Route::get('/contest/{contest}/task/{task}', [ContestController::class, 'task'])
+        ->where(['contest' => '[0-9]+', 'task' => '[0-9]+'])
+        ->name('contests.task');
 
     Route::get('/task/solution/{taskId}', [TaskController::class, 'showTaskPage'])
         ->name('task.solution');
@@ -84,6 +94,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/course/{courseName}', [CourseController::class, 'showCoursePage'])
             ->where('courseName', '[-a-zA-Z0-9]+')
             ->name('course.show');
+
+        Route::get('/contests', [ContestController::class, 'index'])
+            ->name('contests.index');
+
+        Route::get('/contest/{contest}', [ContestController::class, 'show'])
+            ->name('contests.show');
     });
 
     Route::middleware('admin')->group(function () {
@@ -110,6 +126,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('/courses/create', [CourseController::class, 'createCourse'])
             ->name('courses.create.create');
+
+        Route::get('/admin/contests', [AdminContestController::class, 'index'])
+            ->name('admin.contests.index');
+
+        Route::post('/admin/contests', [AdminContestController::class, 'store'])
+            ->name('admin.contests.store');
+
+        Route::put('/admin/contests/{contest}', [AdminContestController::class, 'update'])
+            ->where('contest', '[0-9]+')
+            ->name('admin.contests.update');
+
+        Route::post('/admin/contests/{contest}/start-now', [AdminContestController::class, 'startNow'])
+            ->where('contest', '[0-9]+')
+            ->name('admin.contests.start-now');
+
+        Route::delete('/admin/contests/{contest}', [AdminContestController::class, 'destroy'])
+            ->where('contest', '[0-9]+')
+            ->name('admin.contests.destroy');
 
         Route::get('/admin/tasks', [AdminController::class, 'showTasksPage'])
             ->name('admin.tasks.show');

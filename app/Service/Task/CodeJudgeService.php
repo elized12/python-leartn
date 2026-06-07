@@ -14,6 +14,7 @@ use Symfony\Component\Process\Exception\ProcessTimedOutException;
 class CodeJudgeService
 {
     public const EXIT_CODE_TIME_LIMIT = 124;
+    public const EXIT_CODE_OUTPUT_LIMIT = 125;
     public const EXIT_CODE_MEMORY_LIMIT = 137;
     public const EXIT_CODE_NORMAL = 0;
 
@@ -58,16 +59,18 @@ class CodeJudgeService
                     $input,
                     (float) ($task->time_limit_s ?: 15)
                 );
+
                 $solutionProcess = $solutionRun['process'];
-                $executionTimeS = $this->extractCpuTimeS($solutionProcess) ?? 0.0;
+                $errorOutput = $solutionProcess->getErrorOutput();
+                $executionTimeS = $this->extractCpuTimeS($errorOutput) ?? 0.0;
                 $maxExecutionTimeS = max($maxExecutionTimeS, $executionTimeS);
                 $peakMemoryUsageMb = max(
                     $peakMemoryUsageMb ?? 0,
                     $solutionRun['peak_memory_usage_mb'] ?? 0,
-                    $this->extractPeakMemoryUsageMb($solutionProcess) ?? 0
+                    $this->extractPeakMemoryUsageMb($errorOutput) ?? 0
                 ) ?: $peakMemoryUsageMb;
 
-                $status = $this->statusFromExitCode($solutionProcess->getExitCode() ?? 1);
+                $status = $this->statusFromProcess($solutionProcess, $errorOutput);
                 if ($status !== TaskStatus::COMPLETED) {
                     return new JudgeRunResult(
                         $status,
@@ -99,7 +102,7 @@ class CodeJudgeService
             return new JudgeRunResult(
                 TaskStatus::COMPLETED,
                 'Задача выполнена',
-                executionTimeS: round($maxExecutionTimeS, 3),
+                executionTimeS: round($maxExecutionTimeS, 4),
                 peakMemoryUsageMb: $peakMemoryUsageMb,
             );
         } finally {
@@ -206,6 +209,7 @@ class CodeJudgeService
 
         $memoryLimit = max(64, (int) ($task->memory_limit_mb ?: 128)) . 'm';
         $cpuLimit = max(1, (int) ceil($timeLimitS));
+        $outputLimitBytes = max(1024, (int) config('judge.output_limit_bytes', 1048576));
         $wallTimeout = $this->wallTimeoutForCpuLimit($cpuLimit);
         $containerName = 'judge_' . str_replace('-', '', Str::uuid()->toString());
         $dockerUser = $this->dockerUser();
@@ -216,6 +220,7 @@ class CodeJudgeService
             '--name',
             $containerName,
             '--rm',
+            '--log-driver=none',
             '-i',
             "--memory={$memoryLimit}",
             "--memory-swap={$memoryLimit}",
@@ -242,6 +247,7 @@ class CodeJudgeService
             'python3',
             'judge_runner.py',
             (string) $cpuLimit,
+            (string) $outputLimitBytes,
             $entrypoint,
             ...$arguments,
         );
@@ -401,26 +407,22 @@ class CodeJudgeService
         return $mb === null ? null : (int) ceil($mb);
     }
 
-    private function extractPeakMemoryUsageMb(Process $process): ?int
+    private function extractPeakMemoryUsageMb(string $errorOutput): ?int
     {
-        if (!preg_match('/__JUDGE_PEAK_MEMORY_KB__:(\d+)/', $process->getErrorOutput(), $matches)) {
+        if (!preg_match('/__JUDGE_PEAK_MEMORY_KB__:(\d+)/', $errorOutput, $matches)) {
             return null;
         }
 
         return (int) ceil(((int) $matches[1]) / 1024);
     }
 
-    private function extractCpuTimeS(Process $process): ?float
+    private function extractCpuTimeS(string $errorOutput): ?float
     {
-        $errorOutput = $process->getErrorOutput();
-        if (
-            !preg_match('/__JUDGE_USER_TIME_S__:(\d+(?:\.\d+)?)/', $errorOutput, $userMatches)
-            || !preg_match('/__JUDGE_SYSTEM_TIME_S__:(\d+(?:\.\d+)?)/', $errorOutput, $systemMatches)
-        ) {
+        if (!preg_match('/__JUDGE_ELAPSED_TIME_S__:(\d+(?:\.\d+)?)/', $errorOutput, $matches)) {
             return null;
         }
 
-        return round((float) $userMatches[1] + (float) $systemMatches[1], 3);
+        return round((float) $matches[1], 3);
     }
 
     private function cleanProcessErrorOutput(Process $process): string
@@ -431,24 +433,76 @@ class CodeJudgeService
     private function runnerWrapperCode(): string
     {
         return <<<'PY'
+import os
 import resource
+import selectors
 import signal
 import subprocess
 import sys
 
 cpu_limit = max(1, int(sys.argv[1]))
-target = sys.argv[2]
+output_limit = max(1024, int(sys.argv[2]))
+target = sys.argv[3]
 exit_code = 1
+output_bytes = 0
+output_limit_exceeded = False
 
 def limit_cpu():
     resource.setrlimit(resource.RLIMIT_CPU, (cpu_limit, cpu_limit + 1))
 
+def forward_chunk(stream, chunk):
+    global output_bytes, output_limit_exceeded
+
+    if not chunk:
+        return
+
+    remaining = output_limit - output_bytes
+    if remaining > 0:
+        stream.write(chunk[:remaining])
+        stream.flush()
+
+    output_bytes += len(chunk)
+    if output_bytes > output_limit:
+        output_limit_exceeded = True
+
 try:
-    completed = subprocess.run([sys.executable, target, *sys.argv[3:]], preexec_fn=limit_cpu)
-    if completed.returncode in (-signal.SIGXCPU, -signal.SIGKILL):
+    process = subprocess.Popen(
+        [sys.executable, target, *sys.argv[4:]],
+        stdin=sys.stdin,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        preexec_fn=limit_cpu,
+    )
+
+    selector = selectors.DefaultSelector()
+    selector.register(process.stdout, selectors.EVENT_READ, sys.stdout.buffer)
+    selector.register(process.stderr, selectors.EVENT_READ, sys.stderr.buffer)
+
+    while selector.get_map():
+        for key, _ in selector.select(timeout=0.1):
+            chunk = os.read(key.fileobj.fileno(), 8192)
+            if not chunk:
+                selector.unregister(key.fileobj)
+                continue
+
+            forward_chunk(key.data, chunk)
+            if output_limit_exceeded and process.poll() is None:
+                process.kill()
+
+        if process.poll() is not None and not selector.get_map():
+            break
+
+    completed_return_code = process.wait()
+
+    if output_limit_exceeded:
+        print("\n__JUDGE_OUTPUT_LIMIT_EXCEEDED__", file=sys.stderr)
+        exit_code = 125
+    elif completed_return_code == -signal.SIGXCPU:
         exit_code = 124
+    elif completed_return_code == -signal.SIGKILL:
+        exit_code = 137
     else:
-        exit_code = completed.returncode
+        exit_code = completed_return_code
 finally:
     usage = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
     usage = max(usage, resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
@@ -506,8 +560,28 @@ PY;
             self::EXIT_CODE_NORMAL => TaskStatus::COMPLETED,
             self::EXIT_CODE_TIME_LIMIT => TaskStatus::TIME_LIMIT,
             self::EXIT_CODE_MEMORY_LIMIT => TaskStatus::MEMORY_LIMIT,
+            self::EXIT_CODE_OUTPUT_LIMIT => TaskStatus::OTHER_ERROR,
             default => TaskStatus::OTHER_ERROR,
         };
+    }
+
+    private function statusFromProcess(Process $process, string $errorOutput): TaskStatus
+    {
+        $status = $this->statusFromExitCode($process->getExitCode() ?? 1);
+
+        if ($status === TaskStatus::OTHER_ERROR && $this->looksLikeMemoryLimit($errorOutput)) {
+            return TaskStatus::MEMORY_LIMIT;
+        }
+
+        return $status;
+    }
+
+    private function looksLikeMemoryLimit(string $errorOutput): bool
+    {
+        return str_contains($errorOutput, 'MemoryError')
+            || str_contains($errorOutput, 'Cannot allocate memory')
+            || str_contains($errorOutput, 'Command terminated by signal 9')
+            || preg_match('/(^|\s)Killed(\s|$)/i', $errorOutput);
     }
 
     private function buildRuntimeDescription(TaskStatus $status, int $testNumber, string $errorOutput): string
@@ -515,6 +589,9 @@ PY;
         return match ($status) {
             TaskStatus::TIME_LIMIT => "Превышено время выполнения на тесте {$testNumber}",
             TaskStatus::MEMORY_LIMIT => "Превышен лимит памяти на тесте {$testNumber}",
+            TaskStatus::OTHER_ERROR => str_contains($errorOutput, '__JUDGE_OUTPUT_LIMIT_EXCEEDED__')
+                ? "Превышен лимит вывода на тесте {$testNumber}. Проверьте, нет ли бесконечного print или слишком большого вывода."
+                : ($errorOutput ?: "Ошибка выполнения на тесте {$testNumber}"),
             default => $errorOutput ?: "Ошибка выполнения на тесте {$testNumber}",
         };
     }

@@ -2,6 +2,7 @@
 
 namespace App\Service\Ai;
 
+use App\Models\Ai\AiPromptTemplate;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -35,7 +36,6 @@ class OllamaSettingsService
 3. Что стоит проверить
 4. Небольшая подсказка без готового решения
 PROMPT;
-
     private const DEFAULT_USER_PROMPT = <<<'PROMPT'
 Название задачи:
 {{task_title}}
@@ -73,6 +73,38 @@ PROMPT;
     {
         return (string) ($this->settings()['model'] ?? config('ollama.model'));
     }
+    
+    public function activePromptTemplate(): AiPromptTemplate
+    {
+        $template = AiPromptTemplate::query()
+            ->where('is_active', true)
+            ->latest('id')
+            ->first();
+
+        if ($template instanceof AiPromptTemplate) {
+            return $template;
+        }
+
+        return $this->ensureDefaultPromptTemplate();
+    }
+
+    public function currentOptions(): array
+    {
+        $template = $this->activePromptTemplate();
+
+        return array_filter(
+            array_merge(
+                [
+                    'temperature' => config('ollama.temperature', 0.2),
+                    'num_predict' => config('ollama.num_predict', 550),
+                    'num_ctx' => config('ollama.num_ctx', 8192),
+                    'keep_alive' => config('ollama.keep_alive', '5m'),
+                ],
+                (array) ($template->parameters ?? [])
+            ),
+            static fn($value) => $value !== null && $value !== ''
+        );
+    }
 
     public function saveModel(string $model): void
     {
@@ -84,21 +116,36 @@ PROMPT;
 
     public function systemPrompt(): string
     {
-        return (string) ($this->settings()['system_prompt'] ?? self::DEFAULT_SYSTEM_PROMPT);
+        return $this->activePromptTemplate()->system_prompt;
     }
 
     public function userPromptTemplate(): string
     {
-        return (string) ($this->settings()['user_prompt'] ?? self::DEFAULT_USER_PROMPT);
+        return $this->activePromptTemplate()->user_prompt;
     }
 
-    public function savePrompts(string $systemPrompt, string $userPrompt): void
+    public function savePrompts(string $systemPrompt, string $userPrompt, array $options = [], ?string $name = null): AiPromptTemplate
     {
         $settings = $this->settings();
         $settings['system_prompt'] = $systemPrompt;
         $settings['user_prompt'] = $userPrompt;
-
         $this->saveSettings($settings);
+
+        $template = AiPromptTemplate::query()->create([
+            'name' => $name ?: 'Prompt ' . now()->format('d.m.Y H:i'),
+            'description' => 'Сохранено из панели администратора',
+            'system_prompt' => $systemPrompt,
+            'user_prompt' => $userPrompt,
+            'parameters' => $this->mergeOptions($options),
+            'is_active' => true,
+            'is_default' => false,
+        ]);
+
+        AiPromptTemplate::query()
+            ->where('id', '!=', $template->id)
+            ->update(['is_active' => false]);
+
+        return $template;
     }
 
     public function promptVariables(): array
@@ -181,6 +228,47 @@ PROMPT;
         $settings = json_decode((string) Storage::get(self::SETTINGS_PATH), true);
 
         return is_array($settings) ? $settings : [];
+    }
+
+    private function ensureDefaultPromptTemplate(): AiPromptTemplate
+    {
+        $legacy = $this->settings();
+
+        $template = AiPromptTemplate::query()
+            ->where('is_default', true)
+            ->orWhere('name', 'Default prompt')
+            ->latest('id')
+            ->first();
+
+        if ($template instanceof AiPromptTemplate) {
+            return $template;
+        }
+
+        return AiPromptTemplate::query()->create([
+            'name' => 'Default prompt',
+            'description' => 'Стандартный шаблон подсказок',
+            'system_prompt' => (string) ($legacy['system_prompt'] ?? self::DEFAULT_SYSTEM_PROMPT),
+            'user_prompt' => (string) ($legacy['user_prompt'] ?? self::DEFAULT_USER_PROMPT),
+            'parameters' => $this->mergeOptions([]),
+            'is_active' => true,
+            'is_default' => true,
+        ]);
+    }
+
+    private function mergeOptions(array $options): array
+    {
+        return array_filter(
+            array_merge(
+                [
+                    'temperature' => config('ollama.temperature', 0.2),
+                    'num_predict' => config('ollama.num_predict', 550),
+                    'num_ctx' => config('ollama.num_ctx', 8192),
+                    'keep_alive' => config('ollama.keep_alive', '5m'),
+                ],
+                $options
+            ),
+            static fn($value) => $value !== null && $value !== ''
+        );
     }
 
     private function saveSettings(array $settings): void

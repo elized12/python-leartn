@@ -76,14 +76,27 @@ class AiSettingsController extends Controller
     public function updatePrompt(Request $request, OllamaSettingsService $ollamaSettings): RedirectResponse
     {
         $data = $request->validate([
+            'name' => ['nullable', 'string', 'max:120'],
             'system_prompt' => ['required', 'string', 'max:12000'],
             'user_prompt' => ['required', 'string', 'max:20000'],
+            'temperature' => ['nullable', 'numeric', 'between:0,1'],
+            'num_predict' => ['nullable', 'integer', 'min:1', 'max:8192'],
+            'num_ctx' => ['nullable', 'integer', 'min:1', 'max:32768'],
         ]);
 
-        $ollamaSettings->savePrompts($data['system_prompt'], $data['user_prompt']);
+        $ollamaSettings->savePrompts(
+            $data['system_prompt'],
+            $data['user_prompt'],
+            array_filter([
+                'temperature' => $data['temperature'] ?? null,
+                'num_predict' => $data['num_predict'] ?? null,
+                'num_ctx' => $data['num_ctx'] ?? null,
+            ], static fn($value) => $value !== null && $value !== ''),
+            $data['name'] ?? null,
+        );
 
         return redirect()
             ->route('admin.ai-settings.index')
-            ->with('success', 'Промпт подсказок обновлен');
+            ->with('success', 'Промпт подсказок сохранён как новая версия в базе данных');
     }
 }

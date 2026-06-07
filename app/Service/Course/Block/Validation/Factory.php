@@ -6,9 +6,9 @@ use App\Service\Course\TypeBlock;
 
 class Factory
 {
-    public function create(TypeBlock $type): object
+    public function create(TypeBlock $type): BlockValidatorInterface
     {
-        return match($type) {
+        return match ($type) {
             TypeBlock::Video => new Video(),
             TypeBlock::ExecutableCode => new ExecutableCode(),
             TypeBlock::Divider => new Divider(),
@@ -20,15 +20,15 @@ class Factory
             default => throw new \InvalidArgumentException("Валидатор для типа блока '{$type->value}' не найден")
         };
     }
-    
-    public function createByString(string $type): object
+
+    public function createByString(string $type): BlockValidatorInterface
     {
         $typeBlock = TypeBlock::tryFrom($type);
-        
+
         if (!$typeBlock) {
             throw new \InvalidArgumentException("Неизвестный тип блока: '{$type}'");
         }
-        
+
         return $this->create($typeBlock);
     }
 }

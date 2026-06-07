@@ -7,6 +7,8 @@ use App\Jobs\GenerateAiHint;
 use App\Models\Task\Attempt;
 use App\Models\Task\Category;
 use App\Models\Task\Comment;
+use App\Models\Task\Contest;
+use App\Models\Task\ContestParticipant;
 use App\Models\Task\File as TaskFile;
 use App\Models\Task\Task;
 use App\Service\MarkdownConverter;
@@ -44,6 +46,7 @@ class TaskController
             ->values();
 
         $tasks = Task::query()
+            ->where('is_public', true)
             ->with('categories')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($searchQuery) use ($search) {
@@ -68,6 +71,7 @@ class TaskController
             ->withQueryString();
 
         $recommendedTask = Task::query()
+            ->where('is_public', true)
             ->with('categories')
             ->whereNotIn('id', $solvedTaskIds)
             ->when($categorySlug, function ($query) use ($categorySlug) {
@@ -82,7 +86,7 @@ class TaskController
         return view('task.tasks', [
             'tasks' => $tasks,
             'user' => $user,
-            'categories' => Category::query()->orderBy('name')->get(),
+            'categories' => Category::all(),
             'activeCategorySlug' => $categorySlug,
             'activeDifficulty' => $difficulty,
             'activeStatus' => $status,
@@ -93,7 +97,7 @@ class TaskController
         ]);
     }
 
-    public function showTaskPage(int $taskId): View
+    public function showTaskPage(Request $request, int $taskId): View
     {
         $task = Task::query()
             ->with(['categories', 'comments.user', 'files', 'environment'])
@@ -103,9 +107,28 @@ class TaskController
             return view('task.task-not-found');
         }
 
+        if (!$task->is_public && !Auth::user()?->is_admin) {
+            abort(404);
+        }
+
+        $contest = null;
+        $contestId = $request->integer('contest_id');
+        if ($contestId) {
+            $candidateContest = Contest::query()->with('tasks')->find($contestId);
+            if (
+                $candidateContest
+                && $candidateContest->tasks->contains('id', $task->id)
+                && ContestParticipant::where('contest_id', $candidateContest->id)->where('user_id', Auth::id())->exists()
+            ) {
+                $contest = $candidateContest;
+            }
+        }
+
         $attempts = Attempt::query()
             ->where('task_id', $taskId)
             ->where('user_id', Auth::id())
+            ->when($contest, fn($query) => $query->where('contest_id', $contest->id))
+            ->when(!$contest, fn($query) => $query->whereNull('contest_id'))
             ->latest()
             ->get();
 
@@ -155,6 +178,7 @@ class TaskController
                     ->values()
                     ->all(),
             ],
+            'contest' => $contest,
         ]);
     }
 
@@ -231,7 +255,7 @@ class TaskController
 
     public function showAuthorSolution(int $taskId): JsonResponse
     {
-        $task = Task::find($taskId);
+        $task = Task::query()->find($taskId);
         if (!$task) {
             return response()->json([
                 'status' => false,

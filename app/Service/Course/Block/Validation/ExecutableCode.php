@@ -2,7 +2,7 @@
 
 namespace App\Service\Course\Block\Validation;
 
-class ExecutableCode
+class ExecutableCode implements BlockValidatorInterface
 {
     private const REQUIRED_FIELDS = ['title', 'description', 'language', 'code'];
     private const ALLOWED_LANGUAGES = ['python'];

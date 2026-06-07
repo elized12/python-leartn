@@ -114,12 +114,14 @@
                         <i class="fas fa-user-graduate"></i> Мои курсы
                     </a>
                     @if(auth()->user()?->is_admin)
+                    @if(auth()->user()?->is_admin)
                         <a href="{{ route('courses.create.show') }}" class="btn primary-btn" style="margin-right: 15px;">
                             <i class="fas fa-plus"></i> Создать курс
                         </a>
                         <a href="{{ route('courses.drafts.show') }}" class="btn outline-btn" style="margin-right: 15px;">
                             <i class="fas fa-folder-open"></i> Черновики
                         </a>
+                    @endif
                     @endif
                     <div class="search-box">
                         <i class="fas fa-search"></i>

@@ -47,7 +47,7 @@
                 <label>
                     Выбрать установленную модель
                     <select name="model" required>
-                        @if($models->isEmpty())
+                        @if(count($models) === 0)
                             <option value="{{ $currentModel }}">{{ $currentModel }}</option>
                         @endif
                         @foreach($models as $model)
@@ -114,6 +114,29 @@
                 @method('PUT')
 
                 <label>
+                    Название версии промпта
+                    <input type="text" name="name" value="{{ old('name', 'Prompt ' . now()->format('d.m.Y H:i')) }}" maxlength="120" placeholder="Например: v2.1 — объяснение ошибок">
+                    <span class="muted">
+                        Каждая сохранённая версия записывается в БД и не удаляется, чтобы можно было анализировать, какой промпт использовался для конкретной попытки.
+                    </span>
+                </label>
+
+                <div class="admin-stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 12px;">
+                    <label>
+                        Temperature
+                        <input type="number" step="0.05" min="0" max="1" name="temperature" value="{{ old('temperature', config('ollama.temperature', 0.2)) }}">
+                    </label>
+                    <label>
+                        num_ctx
+                        <input type="number" min="1" max="32768" name="num_ctx" value="{{ old('num_ctx', config('ollama.num_ctx', 8192)) }}">
+                    </label>
+                    <label>
+                        num_predict
+                        <input type="number" min="1" max="8192" name="num_predict" value="{{ old('num_predict', config('ollama.num_predict', 550)) }}">
+                    </label>
+                </div>
+
+                <label>
                     System prompt
                     <textarea name="system_prompt" rows="14" required>{{ old('system_prompt', $systemPrompt) }}</textarea>
                     <span class="muted">
@@ -129,7 +152,7 @@
                     </span>
                 </label>
 
-                <button type="submit" class="btn btn-primary">Сохранить промпт</button>
+                <button type="submit" class="btn btn-primary">Сохранить промпт как новую версию</button>
             </form>
 
             <aside class="ai-prompt-help">

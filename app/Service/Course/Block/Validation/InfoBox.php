@@ -2,7 +2,7 @@
 
 namespace App\Service\Course\Block\Validation;
 
-class InfoBox
+class InfoBox implements BlockValidatorInterface
 {
     public function validate(string $block): array
     {

@@ -24,12 +24,14 @@ class CheckSolution implements ShouldQueue
     public string $code;
     public int $taskId;
     public int $userId;
+    public ?int $contestId;
 
-    public function __construct(string $code, int $taskId, int $userId)
+    public function __construct(string $code, int $taskId, int $userId, ?int $contestId = null)
     {
         $this->code = $code;
         $this->taskId = $taskId;
         $this->userId = $userId;
+        $this->contestId = $contestId;
         $this->onQueue(config('queue.names.solution_checks', 'solution-checks'));
     }
 
@@ -60,7 +62,8 @@ class CheckSolution implements ShouldQueue
                 $ex->getMessage(),
                 null,
                 null,
-                $this->code
+                $this->code,
+                $this->contestId
             );
             $attempt->save();
 
@@ -84,7 +87,8 @@ class CheckSolution implements ShouldQueue
             $result->description,
             $result->executionTimeS,
             $result->peakMemoryUsageMb,
-            $this->code
+            $this->code,
+            $this->contestId
         );
         $attempt->save();
 
@@ -143,11 +147,13 @@ class CheckSolution implements ShouldQueue
         string $description,
         ?float $executonTime = null,
         ?int $executionMemory = null,
-        ?string $code = null
+        ?string $code = null,
+        ?int $contestId = null
     ): Attempt {
         $attempt = new Attempt();
         $attempt->user_id = $userId;
         $attempt->task_id = $taskId;
+        $attempt->contest_id = $contestId;
         $attempt->status = $status;
         $attempt->peak_memory_usage_mb = $executionMemory;
         $attempt->execution_time_s = $executonTime;

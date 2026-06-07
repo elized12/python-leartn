@@ -2,7 +2,7 @@
 
 namespace App\Service\Course\Block\Validation;
 
-class Divider
+class Divider implements BlockValidatorInterface
 {
     private const ALLOWED_POSITIONS = ['left', 'center', 'right'];
     private const ALLOWED_TYPES = ['solid', 'dashed', 'dotted', 'double'];

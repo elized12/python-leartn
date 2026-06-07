@@ -971,6 +971,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         setAiHintUnavailable();
 
         const code = form.querySelector('textarea[name="code"]').value;
+        const contestInput = form.querySelector('input[name="contest_id"]');
+        const payload = { code };
+        if (contestInput?.value) {
+            payload.contest_id = Number(contestInput.value);
+        }
         const csrf = form.querySelector('input[name="_token"]').value;
 
         try {
@@ -981,7 +986,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     'X-CSRF-TOKEN': csrf,
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ code })
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) {

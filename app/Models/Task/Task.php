@@ -21,6 +21,7 @@ class Task extends Model
         'memory_limit_mb',
         'rating',
         'example',
+        'is_public',
         'runner_file_path',
         'checker_file_path',
         'environment_id',
@@ -31,6 +32,7 @@ class Task extends Model
         'tests' => 'array',
         'time_limit_s' => 'float',
         'memory_limit_mb' => 'integer',
+        'is_public' => 'boolean',
     ];
 
     public function environment()
@@ -57,5 +59,10 @@ class Task extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class, 'task_id')->latest();
+    }
+
+    public function contests()
+    {
+        return $this->belongsToMany(Contest::class, 'contest_task', 'task_id', 'contest_id');
     }
 }

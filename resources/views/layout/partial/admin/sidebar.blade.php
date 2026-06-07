@@ -30,6 +30,19 @@
             </a>
         </li>
         <li class="nav-item">
+            <a href="{{ route('admin.contests.index') }}"
+                class="nav-link {{ request()->routeIs('admin.contests.*') ? 'active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                    <path d="M8 8h8"></path>
+                    <path d="M8 12h8"></path>
+                    <path d="M8 16h5"></path>
+                </svg>
+                Контесты
+            </a>
+        </li>
+        <li class="nav-item">
             <a href="{{ route('admin.categories.index') }}"
                 class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"

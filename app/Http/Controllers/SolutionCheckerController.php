@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\CheckSolution;
+use App\Models\Task\Contest;
+use App\Models\Task\ContestParticipant;
 use App\Models\Task\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +17,8 @@ class SolutionCheckerController extends Controller
     {
         $request->validate(
             [
-                'code' => 'required|string'
+                'code' => 'required|string',
+                'contest_id' => 'nullable|integer|exists:contest,id',
             ]
         );
 
@@ -30,7 +33,24 @@ class SolutionCheckerController extends Controller
             );
         }
 
-        CheckSolution::dispatch($request->input('code'), $taskId, Auth::user()->id);
+        $contestId = $request->integer('contest_id') ?: null;
+        if ($contestId) {
+            $contest = Contest::query()->with('tasks')->find($contestId);
+
+            if (
+                !$contest
+                || !$contest->isRunning()
+                || !$contest->tasks->contains('id', $task->id)
+                || !ContestParticipant::where('contest_id', $contest->id)->where('user_id', Auth::id())->exists()
+            ) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Отправка решения в этот контест недоступна',
+                ], 403);
+            }
+        }
+
+        CheckSolution::dispatch($request->input('code'), $taskId, Auth::user()->id, $contestId);
 
         return response()->json([
             'status' => true,

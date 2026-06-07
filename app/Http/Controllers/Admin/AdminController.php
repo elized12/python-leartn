@@ -44,7 +44,7 @@ class AdminController extends Controller
     {
         $users = User::query()
             ->latest()
-            ->limit(5)
+            ->limit(12)
             ->get()
             ->map(fn(User $user) => [
                 'type' => 'user',
@@ -94,26 +94,13 @@ class AdminController extends Controller
             ->limit(8)
             ->get()
             ->filter(fn(CompletedLesson $completedLesson) => $completedLesson->lesson?->course)
-            ->filter(function (CompletedLesson $completedLesson) {
-                $course = $completedLesson->lesson->course;
-                $lessonIds = $course->lessons()->pluck('id');
-
-                if ($lessonIds->isEmpty()) {
-                    return false;
-                }
-
-                $completedCount = CompletedLesson::where('user_id', $completedLesson->user_id)
-                    ->whereIn('course_lesson_id', $lessonIds)
-                    ->count();
-
-                return $completedCount >= $lessonIds->count();
-            })
             ->map(fn(CompletedLesson $completedLesson) => [
-                'type' => 'course_success',
-                'title' => 'Курс пройден',
-                'message' => ($completedLesson->user?->name ?? 'Пользователь') . ' прошел курс «' . $completedLesson->lesson->course->title . '»',
+                'type' => 'course_progress',
+                'title' => 'Прогресс курса',
+                'message' => ($completedLesson->user?->name ?? 'Пользователь') . ' прошел урок курса «' . $completedLesson->lesson->course->title . '»',
                 'created_at' => $completedLesson->created_at,
             ]);
+
 
         return $users
             ->merge($tasks)

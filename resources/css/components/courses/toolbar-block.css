@@ -237,6 +237,11 @@
     z-index: 1;
 }
 
+.block-icon i {
+    position: relative;
+    z-index: 2;
+}
+
 .block-card[data-type="text"] .block-icon {
     background: linear-gradient(135deg, #8b5cf6, #7c3aed);
 }
@@ -250,7 +255,12 @@
 }
 
 .block-card[data-type="taskList"] .block-icon {
-    background: linear-gradient(135deg, #14b8a6, #0f766e);
+    background: linear-gradient(135deg, #22c55e, #2563eb);
+    box-shadow: 0 12px 26px rgba(37, 99, 235, 0.2);
+}
+
+.block-card[data-type="taskList"] .block-icon i {
+    font-size: 1.65rem;
 }
 
 .block-card[data-type="infoBox"] .block-icon {

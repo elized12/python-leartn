@@ -56,6 +56,7 @@ class TaskController extends Controller
                     'rating' => $request->input('rating'),
                     'time_limit_s' => $request->input('time_limit_s'),
                     'memory_limit_mb' => $request->input('memory_limit_mb'),
+                    'is_public' => (bool) $request->input('is_public', true),
                     'environment_id' => $request->input('execution_environment_id'),
                     'tests' => $testsPayload,
                 ]);
@@ -171,6 +172,7 @@ class TaskController extends Controller
                     'rating' => $request->input('rating'),
                     'time_limit_s' => $request->input('time_limit_s'),
                     'memory_limit_mb' => $request->input('memory_limit_mb'),
+                    'is_public' => (bool) $request->input('is_public', true),
                     'environment_id' => $request->input('execution_environment_id'),
                     'tests' => $testsPayload,
                 ]);
@@ -321,6 +323,7 @@ class TaskController extends Controller
             'starter_code' => 'nullable|string|max:20000',
             'time_limit_s' => 'required|numeric|min:0.1|max:30',
             'memory_limit_mb' => 'required|integer|min:64|max:2048',
+            'is_public' => 'boolean',
         ];
     }
 

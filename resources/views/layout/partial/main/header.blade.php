@@ -13,6 +13,9 @@
                 <li><a href="{{ request()->routeIs('tasks.show') ? '#' : route('tasks.show') }}"
                         class="{{ request()->routeIs('tasks.show') ? 'active' : '' }}"><i class="fas fa-list-ul"></i>
                         Задачи</a></li>
+                <li><a href="{{ request()->routeIs('contests.*') ? '#' : route('contests.index') }}"
+                        class="{{ request()->routeIs('contests.*') ? 'active' : '' }}"><i class="fas fa-trophy"></i>
+                        Контесты</a></li>
                 <li><a href="{{ request()->routeIs('courses.show') ? '#' : route('courses.show') }}"
                         class="{{ request()->routeIs('courses.show') ? 'active' : '' }}"><i
                             class="fas fa-graduation-cap"></i>Курсы</a></li>

@@ -2,6 +2,7 @@
 
 namespace App\Models\Task;
 
+use App\Models\Ai\AiPromptTemplate;
 use App\Service\Task\TaskStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,11 +17,13 @@ class Attempt extends Model
         'id',
         'status',
         'task_id',
+        'contest_id',
         'user_id',
         'execution_time_s',
         'peak_memory_usage_mb',
         'description',
         'code',
+        'prompt_template_id',
     ];
 
     protected $casts = [
@@ -35,5 +38,15 @@ class Attempt extends Model
     public function task()
     {
         return $this->belongsTo(Task::class, 'task_id');
+    }
+
+    public function contest()
+    {
+        return $this->belongsTo(Contest::class, 'contest_id');
+    }
+
+    public function promptTemplate()
+    {
+        return $this->belongsTo(AiPromptTemplate::class, 'prompt_template_id');
     }
 }

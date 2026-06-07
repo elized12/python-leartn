@@ -23,6 +23,8 @@ class AiHintService
             throw new RuntimeException('ИИ-подсказки временно отключены.');
         }
 
+        $this->bindPromptTemplate($attempt);
+
         $response = Http::timeout((int) config('ollama.timeout', 120))
             ->acceptJson()
             ->post(config('ollama.url'), $this->payload($task, $attempt, false));
@@ -45,6 +47,8 @@ class AiHintService
         if (!config('ollama.enabled', true)) {
             throw new RuntimeException('ИИ-подсказки временно отключены.');
         }
+
+        $this->bindPromptTemplate($attempt);
 
         $client = new Client([
             'timeout' => (int) config('ollama.timeout', 120),
@@ -95,40 +99,33 @@ class AiHintService
 
     private function payload(Task $task, Attempt $attempt, bool $stream): array
     {
+        $template = $this->ollamaSettings->activePromptTemplate();
+
         return [
             'model' => $this->ollamaSettings->currentModel(),
             'stream' => $stream,
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => $this->ollamaSettings->systemPrompt(),
+                    'content' => $template->system_prompt,
                 ],
                 [
                     'role' => 'user',
-                    'content' => $this->userPrompt($task, $attempt),
+                    'content' => $this->userPrompt($task, $attempt, $template->user_prompt),
                 ],
             ],
-            'options' => [
-                'temperature' => 0.2,
-                'num_predict' => 550,
-                'num_ctx' => 8192,
-            ],
+            'options' => $this->ollamaSettings->currentOptions(),
         ];
     }
 
-    private function systemPrompt(): string
-    {
-        return $this->ollamaSettings->systemPrompt();
-    }
-
-    private function userPrompt(Task $task, Attempt $attempt): string
+    private function userPrompt(Task $task, Attempt $attempt, string $template): string
     {
         $categories = $task->categories
             ? $task->categories->pluck('name')->filter()->implode(', ')
             : '';
 
         return $this->ollamaSettings->renderTemplate(
-            $this->ollamaSettings->userPromptTemplate(),
+            $template,
             [
                 'task_title' => $this->limitText($task->title ?? 'Без названия', 300),
                 'task_categories' => $this->limitText($categories ?: 'Не указаны', 500),
@@ -141,6 +138,17 @@ class AiHintService
                 'checker_message' => $this->limitText($attempt->description ?? '', 2500),
             ],
         );
+    }
+
+    private function bindPromptTemplate(Attempt $attempt): void
+    {
+        if ($attempt->prompt_template_id) {
+            return;
+        }
+
+        $attempt->forceFill([
+            'prompt_template_id' => $this->ollamaSettings->activePromptTemplate()->id,
+        ])->saveQuietly();
     }
 
     private function formatPublicTests(Task $task): string

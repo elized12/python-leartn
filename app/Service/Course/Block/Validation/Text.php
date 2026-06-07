@@ -2,7 +2,7 @@
 
 namespace App\Service\Course\Block\Validation;
 
-class Text
+class Text implements BlockValidatorInterface
 {
     public function validate(string $block): array
     {

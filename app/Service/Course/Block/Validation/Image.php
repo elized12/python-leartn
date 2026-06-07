@@ -2,7 +2,7 @@
 
 namespace App\Service\Course\Block\Validation;
 
-class Image
+class Image implements BlockValidatorInterface
 {
     private const ALLOWED_WIDTHS = ['100%', '80%', '60%', '40%'];
     private const ALLOWED_ALIGNMENTS = ['left', 'center', 'right'];

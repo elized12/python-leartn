@@ -4,7 +4,7 @@ namespace App\Service\Course\Block\Validation;
 
 use App\Models\Task\Task;
 
-class TaskList
+class TaskList implements BlockValidatorInterface
 {
     public function validate(string $block): array
     {

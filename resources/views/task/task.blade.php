@@ -39,7 +39,10 @@
     <div class="leetcode-shell">
         <main class="problem-panel">
             <div class="problem-topbar">
-                <a class="back-link" href="{{ route('home') }}">Назад</a>
+                <a class="back-link" href="{{ $contest ? route('contests.show', $contest) : route('home') }}">Назад</a>
+                @if($contest)
+                    <span class="locked-badge">Контест: {{ $contest->title }}</span>
+                @endif
                 @if($hasSolvedTask)
                     <span class="solved-badge">Решено</span>
                 @else
@@ -366,6 +369,9 @@
                     <div id="text-editor"></div>
                     <div id="spinner"></div>
                     <textarea name="code" id="text-editor-textarea"></textarea>
+                    @if($contest)
+                        <input type="hidden" name="contest_id" value="{{ $contest->id }}">
+                    @endif
                     <button type="submit" class="run-button">Запустить код</button>
                     <div class="output-container">
                         <div class="io-title">Вывод:</div>
@@ -395,6 +401,7 @@
     <script>
         window.userId = '{{auth()->user()->id}}';
         window.taskId = {{ $task->id }};
+        window.contestId = {{ $contest?->id ?? 'null' }};
         window.taskEditorConfig = @json($editorConfig);
     </script>
     @vite(['resources/js/echo.js', 'resources/js/task/task-editor.js', 'resources/css/task/task.css', 'resources/css/shared/markdown.css'])

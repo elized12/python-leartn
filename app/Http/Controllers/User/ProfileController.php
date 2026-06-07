@@ -9,6 +9,7 @@ use App\Models\Course\Statistics\Participant;
 use App\Models\Task\Attempt;
 use App\Models\User;
 use App\Service\Contest\ContestLeaderboardService;
+use App\Service\KnowledgeTracingService;
 use App\Service\Rating\UserRatingService;
 use App\Service\Task\TaskStatus;
 use Illuminate\Contracts\View\View;
@@ -19,7 +20,8 @@ class ProfileController extends Controller
     public function showProfilePage(
         int $userId,
         UserRatingService $ratingService,
-        ContestLeaderboardService $contestLeaderboardService
+        ContestLeaderboardService $contestLeaderboardService,
+        KnowledgeTracingService $knowledgeTracingService
     ): View {
         $user = User::find($userId);
         if (!$user) {
@@ -63,6 +65,8 @@ class ProfileController extends Controller
             fn($rating) => (int) $rating->user->id === (int) $userId
         );
         $contestResults = $contestLeaderboardService->userContestResults($userId);
+        $knowledgeProfile = $knowledgeTracingService->getUserKnowledgeProfile($user);
+        $recommendedTasks = $knowledgeTracingService->getRecommendedTasks($user, 4);
 
         return view('user.profile', [
             'user' => $user,
@@ -74,6 +78,8 @@ class ProfileController extends Controller
             'activeCourses' => $activeCourses,
             'userRating' => $userRating,
             'contestResults' => $contestResults,
+            'knowledgeProfile' => $knowledgeProfile,
+            'recommendedTasks' => $recommendedTasks,
         ]);
     }
 

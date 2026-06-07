@@ -24,12 +24,14 @@ class Attempt extends Model
         'description',
         'code',
         'prompt_template_id',
+        'knowledge_traced_at',
     ];
 
     protected $casts = [
         'status' => TaskStatus::class,
         'peak_memory_usage_mb' => 'float',
         'execution_time_s' => 'float',
+        'knowledge_traced_at' => 'datetime',
     ];
 
     public function user()

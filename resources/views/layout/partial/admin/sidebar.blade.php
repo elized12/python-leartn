@@ -97,6 +97,18 @@
             </a>
         </li>
         <li class="nav-item">
+            <a href="{{ route('admin.knowledge-tracing.index') }}"
+                class="nav-link {{ request()->routeIs('admin.knowledge-tracing.*') ? 'active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 3v18h18"></path>
+                    <path d="m7 15 4-4 3 3 5-7"></path>
+                    <path d="M14 7h5v5"></path>
+                </svg>
+                Навыки BKT
+            </a>
+        </li>
+        <li class="nav-item">
             <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

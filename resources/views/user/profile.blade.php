@@ -99,6 +99,67 @@
             @endif
         </section>
 
+        <section class="profile-panel knowledge-panel">
+            <div class="section-heading">
+                <div>
+                    <span>Knowledge Tracing</span>
+                    <h2>Профиль знаний</h2>
+                </div>
+                <a href="{{ route('tasks.show') }}">Практиковаться</a>
+            </div>
+
+            @if($knowledgeProfile->isNotEmpty())
+                <div class="knowledge-grid">
+                    @foreach($knowledgeProfile as $item)
+                        <article class="knowledge-item {{ $item->level }}">
+                            <div class="knowledge-item-head">
+                                <strong>{{ $item->category_name }}</strong>
+                                <span>{{ $item->percentage }}%</span>
+                            </div>
+                            <div class="knowledge-progress">
+                                <span style="width: {{ $item->percentage }}%"></span>
+                            </div>
+                            <small>{{ $item->level_label }}</small>
+                        </article>
+                    @endforeach
+                </div>
+            @else
+                <div class="profile-empty compact">
+                    <strong>Профиль знаний еще пуст</strong>
+                    <p>Он появится после первых отправок решений по задачам с категориями.</p>
+                </div>
+            @endif
+        </section>
+
+        <section class="profile-panel recommended-panel">
+            <div class="section-heading">
+                <div>
+                    <span>Рекомендации</span>
+                    <h2>Что решить дальше</h2>
+                </div>
+                <a href="{{ route('tasks.show') }}">Все задачи</a>
+            </div>
+
+            @if($recommendedTasks->isNotEmpty())
+                <div class="recommended-task-list">
+                    @foreach($recommendedTasks as $task)
+                        <a class="recommended-task-card" href="{{ route('task.solution', ['taskId' => $task->id]) }}">
+                            <div>
+                                <strong>{{ $task->title }}</strong>
+                                <p>{{ $task->recommendation_reason }}</p>
+                            </div>
+                            <span>{{ $task->rating }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            @else
+                <div class="profile-empty compact">
+                    <strong>Рекомендаций пока нет</strong>
+                    <p>Добавьте задачи с категориями или решите несколько стартовых задач.</p>
+                </div>
+            @endif
+        </section>
+
         <section class="profile-panel profile-contests-panel">
             <div class="section-heading">
                 <div>

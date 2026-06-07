@@ -9,6 +9,7 @@ use App\Models\Notification;
 use App\Models\Task\Attempt;
 use App\Models\Task\Task;
 use App\Models\User;
+use App\Service\KnowledgeTracingService;
 use App\Service\MarkdownConverter;
 use App\Service\Notification\NotificationType;
 use App\Service\Task\CodeJudgeService;
@@ -66,6 +67,7 @@ class CheckSolution implements ShouldQueue
                 $this->contestId
             );
             $attempt->save();
+            app(KnowledgeTracingService::class)->updateFromAttempt($attempt);
 
             $notification = $this->createNotifacation(
                 $ex->getMessage(),
@@ -91,6 +93,7 @@ class CheckSolution implements ShouldQueue
             $this->contestId
         );
         $attempt->save();
+        app(KnowledgeTracingService::class)->updateFromAttempt($attempt);
 
         $notificationType = $result->isAccepted()
             ? NotificationType::TASK_SUCCESS

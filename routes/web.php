@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Task\CategoryController as AdminCategoryControlle
 use App\Http\Controllers\Admin\Task\EnvironmentController as AdminEnvironmentController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AiSettingsController;
+use App\Http\Controllers\Admin\KnowledgeTracingSettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\ContestController;
 use App\Http\Controllers\CourseController;
@@ -206,6 +207,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('/admin/ai-settings/install', [AiSettingsController::class, 'install'])
             ->name('admin.ai-settings.install');
+
+        Route::get('/admin/knowledge-tracing', [KnowledgeTracingSettingsController::class, 'index'])
+            ->name('admin.knowledge-tracing.index');
+
+        Route::put('/admin/knowledge-tracing', [KnowledgeTracingSettingsController::class, 'update'])
+            ->name('admin.knowledge-tracing.update');
 
         Route::put('/admin/users/{user}/toggle-block', [AdminUserController::class, 'toggleBlock'])
             ->where('user', '[0-9]+')

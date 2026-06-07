@@ -90,12 +90,12 @@
             <main class="tasks-content">
                 <section class="ai-recommendation-card">
                     <div>
-                        <span class="tasks-eyebrow">AI recommendation</span>
+                        <span class="tasks-eyebrow">BKT recommendation</span>
                         <h2>Задача, которую стоит решить дальше</h2>
                         @if($recommendedTask)
-                            <p>Нейросеть может использовать это место для персональной рекомендации. Пока выбран ближайший нерешённый вариант по текущим фильтрам.</p>
+                            <p>{{ $recommendedTask->recommendation_reason ?? 'Рекомендация построена по слабым категориям в профиле знаний.' }}</p>
                         @else
-                            <p>По текущим фильтрам нет нерешённых задач. Можно сбросить фильтры или добавить новые задачи.</p>
+                            <p>Пока нет подходящей рекомендации. Решите несколько задач, чтобы система точнее оценила темы.</p>
                         @endif
                     </div>
                     @if($recommendedTask)

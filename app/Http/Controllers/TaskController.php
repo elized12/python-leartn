@@ -11,6 +11,7 @@ use App\Models\Task\Contest;
 use App\Models\Task\ContestParticipant;
 use App\Models\Task\File as TaskFile;
 use App\Models\Task\Task;
+use App\Service\KnowledgeTracingService;
 use App\Service\MarkdownConverter;
 use App\Service\Task\TaskStatus;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,7 @@ use Illuminate\View\View;
 
 class TaskController
 {
-    public function showTasksPage(Request $request): View
+    public function showTasksPage(Request $request, KnowledgeTracingService $knowledgeTracingService): View
     {
         $user = Auth::user();
         $categorySlug = $request->query('category');
@@ -70,18 +71,10 @@ class TaskController
             ->paginate(10)
             ->withQueryString();
 
-        $recommendedTask = Task::query()
-            ->where('is_public', true)
-            ->with('categories')
-            ->whereNotIn('id', $solvedTaskIds)
-            ->when($categorySlug, function ($query) use ($categorySlug) {
-                $query->whereHas('categories', fn($categoryQuery) => $categoryQuery->where('slug', $categorySlug));
-            })
-            ->when($difficulty === 'easy', fn($query) => $query->where('rating', '<', 1200))
-            ->when($difficulty === 'medium', fn($query) => $query->whereBetween('rating', [1200, 1799]))
-            ->when($difficulty === 'hard', fn($query) => $query->where('rating', '>=', 1800))
-            ->orderBy('rating')
-            ->first();
+        $recommendedTasks = $user
+            ? $knowledgeTracingService->getRecommendedTasks($user, 3)
+            : collect();
+        $recommendedTask = $recommendedTasks->first();
 
         return view('task.tasks', [
             'tasks' => $tasks,

@@ -124,15 +124,18 @@
                 <div class="admin-stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 12px;">
                     <label>
                         Temperature
-                        <input type="number" step="0.05" min="0" max="1" name="temperature" value="{{ old('temperature', config('ollama.temperature', 0.2)) }}">
+                        <input type="text" inputmode="decimal" name="temperature"
+                            value="{{ old('temperature', $aiOptions['temperature'] ?? config('ollama.temperature', 0.2)) }}"
+                            placeholder="0.2 или 0,2">
+                        <span class="muted">Можно вводить с точкой или запятой. В Ollama уйдёт float.</span>
                     </label>
                     <label>
                         num_ctx
-                        <input type="number" min="1" max="32768" name="num_ctx" value="{{ old('num_ctx', config('ollama.num_ctx', 8192)) }}">
+                        <input type="number" min="1" max="32768" name="num_ctx" value="{{ old('num_ctx', $aiOptions['num_ctx'] ?? config('ollama.num_ctx', 8192)) }}">
                     </label>
                     <label>
                         num_predict
-                        <input type="number" min="1" max="8192" name="num_predict" value="{{ old('num_predict', config('ollama.num_predict', 550)) }}">
+                        <input type="number" min="1" max="8192" name="num_predict" value="{{ old('num_predict', $aiOptions['num_predict'] ?? config('ollama.num_predict', 550)) }}">
                     </label>
                 </div>
 

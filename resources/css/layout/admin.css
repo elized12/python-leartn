@@ -339,6 +339,7 @@ body {
 }
 
 .admin-form input[type="text"],
+.admin-form input[type="number"],
 .admin-form select,
 .admin-form textarea {
     width: 100%;
@@ -545,6 +546,181 @@ body {
 
 .empty-state {
     color: #64748b;
+}
+
+.bkt-user-card {
+    margin-top: 18px;
+}
+
+.bkt-settings-divider {
+    padding-top: 4px;
+}
+
+.bkt-settings-divider h3 {
+    margin-bottom: 4px;
+    color: #0f172a;
+    font-size: 16px;
+}
+
+.bkt-user-card .admin-list-header {
+    align-items: center;
+}
+
+.bkt-user-card .admin-list-header h2 {
+    margin-bottom: 0;
+}
+
+.bkt-user-form {
+    grid-template-columns: minmax(280px, 1fr) auto;
+    align-items: end;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.bkt-user-alert,
+.bkt-empty-state {
+    margin-top: 16px;
+}
+
+.bkt-user-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 18px 0;
+}
+
+.bkt-admin-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.bkt-admin-grid h3 {
+    margin-bottom: 12px;
+    color: #0f172a;
+    font-size: 16px;
+}
+
+.bkt-skill-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.bkt-skill-item {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #94a3b8;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.bkt-skill-item.weak {
+    border-left-color: #ef4444;
+}
+
+.bkt-skill-item.need_practice {
+    border-left-color: #f59e0b;
+}
+
+.bkt-skill-item.almost_mastered {
+    border-left-color: #2563eb;
+}
+
+.bkt-skill-item.mastered {
+    border-left-color: #10b981;
+}
+
+.bkt-skill-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: #0f172a;
+}
+
+.bkt-skill-head span {
+    font-weight: 900;
+}
+
+.bkt-progress {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+
+.bkt-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #2563eb;
+}
+
+.bkt-skill-item.weak .bkt-progress span {
+    background: #ef4444;
+}
+
+.bkt-skill-item.need_practice .bkt-progress span {
+    background: #f59e0b;
+}
+
+.bkt-skill-item.almost_mastered .bkt-progress span {
+    background: #2563eb;
+}
+
+.bkt-skill-item.mastered .bkt-progress span {
+    background: #10b981;
+}
+
+.bkt-skill-item small {
+    color: #64748b;
+    font-weight: 800;
+}
+
+.bkt-recommendation-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #0f172a;
+    text-decoration: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.bkt-recommendation-item:hover {
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+
+.bkt-recommendation-item strong,
+.bkt-recommendation-item p {
+    display: block;
+}
+
+.bkt-recommendation-item p {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.bkt-recommendation-item span {
+    min-width: 54px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: #ecfdf5;
+    color: #047857;
+    font-weight: 900;
 }
 
 .users-stats-grid {
@@ -979,8 +1155,15 @@ body {
     .dashboard-grid,
     .course-start-row,
     .ai-prompt-layout,
+    .bkt-admin-grid,
+    .bkt-user-form,
     .admin-list-item.compact,
     .inline-row-form {
+        grid-template-columns: 1fr;
+    }
+
+    .bkt-user-summary,
+    .bkt-skill-list {
         grid-template-columns: 1fr;
     }
 

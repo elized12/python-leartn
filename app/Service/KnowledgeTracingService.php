@@ -54,7 +54,8 @@ class KnowledgeTracingService
                 $mastery->probability = $this->calculateProbability(
                     (float) $mastery->probability,
                     $isCorrect,
-                    $settings
+                    $settings,
+                    (int) ($task->rating ?? 0)
                 );
                 $mastery->save();
             }
@@ -152,7 +153,7 @@ class KnowledgeTracingService
         };
     }
 
-    public function calculateProbability(float $probability, bool $isCorrect, array $settings): float
+    public function calculateProbability(float $probability, bool $isCorrect, array $settings, ?int $taskRating = null): float
     {
         // Упрощенная Bayesian Knowledge Tracing: категория задачи считается учебным навыком.
         $p = max(0, min(1, $probability));
@@ -164,7 +165,13 @@ class KnowledgeTracingService
             ? $this->observedCorrect($p, $guess, $slip)
             : $this->observedIncorrect($p, $guess, $slip);
 
-        return round(max(0, min(1, $observed + (1 - $observed) * $learn)), 4);
+        $updated = $observed + (1 - $observed) * $learn;
+
+        if ($isCorrect && $taskRating !== null) {
+            $updated = min($updated, $this->masteryCapForRating($taskRating, $settings));
+        }
+
+        return round(max(0, min(1, $updated)), 4);
     }
 
     private function hasAlreadyTracedTask(Attempt $attempt): bool
@@ -187,6 +194,22 @@ class KnowledgeTracingService
     {
         $denominator = ($p * $slip) + ((1 - $p) * (1 - $guess));
         return $denominator <= 0 ? $p : ($p * $slip) / $denominator;
+    }
+
+    private function masteryCapForRating(int $rating, array $settings): float
+    {
+        $easyRatingMax = (int) ($settings['easy_rating_max'] ?? 1199);
+        $mediumRatingMax = (int) ($settings['medium_rating_max'] ?? 1799);
+
+        if ($rating <= $easyRatingMax) {
+            return (float) ($settings['easy_mastery_cap'] ?? 0.70);
+        }
+
+        if ($rating <= $mediumRatingMax) {
+            return (float) ($settings['medium_mastery_cap'] ?? 0.85);
+        }
+
+        return (float) ($settings['hard_mastery_cap'] ?? 1.00);
     }
 
     private function profileRow(UserCategoryMastery $mastery): object

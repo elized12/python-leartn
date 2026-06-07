@@ -31,6 +31,7 @@ class AiSettingsController extends Controller
             'systemPrompt' => $ollamaSettings->systemPrompt(),
             'userPrompt' => $ollamaSettings->userPromptTemplate(),
             'promptVariables' => $ollamaSettings->promptVariables(),
+            'aiOptions' => $ollamaSettings->currentOptions(),
         ]);
     }
 
@@ -75,6 +76,10 @@ class AiSettingsController extends Controller
 
     public function updatePrompt(Request $request, OllamaSettingsService $ollamaSettings): RedirectResponse
     {
+        $request->merge([
+            'temperature' => $this->normalizeDecimalInput($request->input('temperature')),
+        ]);
+
         $data = $request->validate([
             'name' => ['nullable', 'string', 'max:120'],
             'system_prompt' => ['required', 'string', 'max:12000'],
@@ -88,9 +93,9 @@ class AiSettingsController extends Controller
             $data['system_prompt'],
             $data['user_prompt'],
             array_filter([
-                'temperature' => $data['temperature'] ?? null,
-                'num_predict' => $data['num_predict'] ?? null,
-                'num_ctx' => $data['num_ctx'] ?? null,
+                'temperature' => isset($data['temperature']) ? (float) $data['temperature'] : null,
+                'num_predict' => isset($data['num_predict']) ? (int) $data['num_predict'] : null,
+                'num_ctx' => isset($data['num_ctx']) ? (int) $data['num_ctx'] : null,
             ], static fn($value) => $value !== null && $value !== ''),
             $data['name'] ?? null,
         );
@@ -98,5 +103,14 @@ class AiSettingsController extends Controller
         return redirect()
             ->route('admin.ai-settings.index')
             ->with('success', 'Промпт подсказок сохранён как новая версия в базе данных');
+    }
+
+    private function normalizeDecimalInput(mixed $value): mixed
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        return str_replace(',', '.', (string) $value);
     }
 }

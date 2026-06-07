@@ -93,14 +93,10 @@ PROMPT;
         $template = $this->activePromptTemplate();
 
         return array_filter(
-            array_merge(
-                [
-                    'temperature' => config('ollama.temperature', 0.2),
-                    'num_predict' => config('ollama.num_predict', 550),
-                    'num_ctx' => config('ollama.num_ctx', 8192),
-                ],
+            $this->normalizeOptions(array_merge(
+                $this->defaultOptions(),
                 (array) ($template->parameters ?? [])
-            ),
+            )),
             static fn($value, $key) => $value !== null && $value !== '' && $key !== 'keep_alive',
             ARRAY_FILTER_USE_BOTH
         );
@@ -263,17 +259,43 @@ PROMPT;
     private function mergeOptions(array $options): array
     {
         return array_filter(
-            array_merge(
-                [
-                    'temperature' => config('ollama.temperature', 0.2),
-                    'num_predict' => config('ollama.num_predict', 550),
-                    'num_ctx' => config('ollama.num_ctx', 8192),
-                ],
-                $options
-            ),
+            $this->normalizeOptions(array_merge($this->defaultOptions(), $options)),
             static fn($value, $key) => $value !== null && $value !== '' && $key !== 'keep_alive',
             ARRAY_FILTER_USE_BOTH
         );
+    }
+
+    private function defaultOptions(): array
+    {
+        return [
+            'temperature' => config('ollama.temperature', 0.2),
+            'num_predict' => config('ollama.num_predict', 550),
+            'num_ctx' => config('ollama.num_ctx', 8192),
+        ];
+    }
+
+    private function normalizeOptions(array $options): array
+    {
+        if (array_key_exists('temperature', $options)) {
+            $options['temperature'] = $this->normalizeFloat($options['temperature']);
+        }
+
+        foreach (['num_predict', 'num_ctx'] as $key) {
+            if (array_key_exists($key, $options) && $options[$key] !== null && $options[$key] !== '') {
+                $options[$key] = (int) $options[$key];
+            }
+        }
+
+        return $options;
+    }
+
+    private function normalizeFloat(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (float) str_replace(',', '.', (string) $value);
     }
 
     private function saveSettings(array $settings): void

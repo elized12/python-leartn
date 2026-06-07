@@ -22,6 +22,17 @@ function updateNotificationCount() {
 function handleClickNotification(event) {
     const notificationId = this.getAttribute('data-notification-id');
 
+    hideNotification(notificationId, () => {
+        this.remove();
+        updateNotificationCount();
+    });
+}
+
+function hideNotification(notificationId, onHidden = null) {
+    if (!notificationId) {
+        return;
+    }
+
     fetch(`/notification/${notificationId}`, {
         method: 'PUT',
         headers: {
@@ -33,8 +44,7 @@ function handleClickNotification(event) {
         .then(response => response.json())
         .then(data => {
             if (data.status) {
-                this.remove();
-                updateNotificationCount();
+                onHidden?.();
             } else {
                 console.error('Ошибка при скрытии уведомления:', data.message);
             }
@@ -108,6 +118,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             console.log('Новое уведомление:', event);
 
+            if (window.taskId && event.task_id && Number(window.taskId) === Number(event.task_id)) {
+                hideNotification(event.id);
+                return;
+            }
+
             toastService.showToast({
                 type: typeMessage,
                 content: event.content,
@@ -138,6 +153,5 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
-
 
 

@@ -13,7 +13,10 @@ class SendNotification implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public Notification $notification) {}
+    public function __construct(
+        public Notification $notification,
+        public ?int $taskId = null
+    ) {}
 
     public function broadcastOn(): array
     {
@@ -28,6 +31,7 @@ class SendNotification implements ShouldBroadcastNow
             'id'      => $this->notification->id,
             'content' => $this->notification->content,
             'type'    => $this->notification->type->value,
+            'task_id' => $this->taskId,
         ];
     }
 

@@ -105,14 +105,14 @@
             <aside class="contest-side">
                 <section class="contest-panel">
                     <div class="contest-panel-header">
-                        <h2>Лидеры</h2>
+                        <h2>{{ $contest->isFinished() ? 'Результаты' : 'Лидеры' }}</h2>
                     </div>
                     @if(!$isStarted)
                         <p class="contest-muted">Таблица лидеров появится после старта.</p>
                     @else
                         @forelse($leaderboard as $row)
-                            <div class="contest-leader-row">
-                                <strong>{{ $loop->iteration }}. {{ $row->name }}</strong>
+                            <div class="contest-leader-row {{ $loop->first ? 'winner' : '' }}">
+                                <strong>{{ $row->rank }}. {{ $row->name }}</strong>
                                 <span>{{ $row->solved }} решено</span>
                             </div>
                         @empty

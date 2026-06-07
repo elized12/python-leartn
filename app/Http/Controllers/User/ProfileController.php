@@ -8,6 +8,7 @@ use App\Models\Course\Statistics\CompletedLesson;
 use App\Models\Course\Statistics\Participant;
 use App\Models\Task\Attempt;
 use App\Models\User;
+use App\Service\Contest\ContestLeaderboardService;
 use App\Service\Rating\UserRatingService;
 use App\Service\Task\TaskStatus;
 use Illuminate\Contracts\View\View;
@@ -15,8 +16,11 @@ use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
-    public function showProfilePage(int $userId, UserRatingService $ratingService): View
-    {
+    public function showProfilePage(
+        int $userId,
+        UserRatingService $ratingService,
+        ContestLeaderboardService $contestLeaderboardService
+    ): View {
         $user = User::find($userId);
         if (!$user) {
             return view('user.not-found-profile');
@@ -58,6 +62,7 @@ class ProfileController extends Controller
         $userRating = $ratingService->leaderboard()->first(
             fn($rating) => (int) $rating->user->id === (int) $userId
         );
+        $contestResults = $contestLeaderboardService->userContestResults($userId);
 
         return view('user.profile', [
             'user' => $user,
@@ -68,6 +73,7 @@ class ProfileController extends Controller
             'completedCourses' => $completedCourses,
             'activeCourses' => $activeCourses,
             'userRating' => $userRating,
+            'contestResults' => $contestResults,
         ]);
     }
 

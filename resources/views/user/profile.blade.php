@@ -95,6 +95,50 @@
             @endif
         </section>
 
+        <section class="profile-panel profile-contests-panel">
+            <div class="section-heading">
+                <div>
+                    <span>Контесты</span>
+                    <h2>Участие и места</h2>
+                </div>
+                <a href="{{ route('contests.index') }}">Все контесты</a>
+            </div>
+
+            @if($contestResults->isNotEmpty())
+                <div class="profile-contest-list">
+                    @foreach($contestResults as $contest)
+                        @php
+                            $result = $contest->user_contest_result;
+                        @endphp
+                        <a class="profile-contest-card" href="{{ route('contests.show', $contest) }}">
+                            <div class="profile-contest-rank">
+                                <span>{{ $contest->statusLabel() }}</span>
+                                <strong>{{ $result ? '#' . $result->rank : '—' }}</strong>
+                            </div>
+                            <div class="profile-contest-main">
+                                <h3>{{ $contest->title }}</h3>
+                                <div class="profile-contest-meta">
+                                    <span>{{ $contest->starts_at?->format('d.m.Y H:i') ?? 'Старт не задан' }}</span>
+                                    <span>{{ $contest->tasks_count }} задач</span>
+                                    <span>{{ $contest->participants_count }} участников</span>
+                                </div>
+                            </div>
+                            <div class="profile-contest-score">
+                                <strong>{{ $result?->solved ?? 0 }}</strong>
+                                <span>решено</span>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            @else
+                <div class="profile-empty compact">
+                    <strong>Контестов пока нет</strong>
+                    <p>Когда пользователь присоединится к контесту, его место появится здесь.</p>
+                    <a href="{{ route('contests.index') }}">Перейти к контестам</a>
+                </div>
+            @endif
+        </section>
+
         <div class="profile-grid">
             <section class="profile-panel learning-panel">
                 <div class="section-heading">

@@ -234,6 +234,102 @@
     margin-bottom: 18px;
 }
 
+.profile-contests-panel {
+    margin-bottom: 18px;
+}
+
+.profile-contest-list {
+    display: grid;
+    gap: 10px;
+}
+
+.profile-contest-card {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr) 86px;
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    color: inherit;
+    text-decoration: none;
+}
+
+.profile-contest-card:hover {
+    border-color: #c7d2fe;
+    background: #f8fafc;
+}
+
+.profile-contest-rank {
+    display: grid;
+    place-items: center;
+    min-height: 74px;
+    border-radius: 9px;
+    background: #eef2ff;
+    color: #4338ca;
+    text-align: center;
+}
+
+.profile-contest-rank span,
+.profile-contest-rank strong {
+    display: block;
+}
+
+.profile-contest-rank span {
+    font-size: 0.72rem;
+    font-weight: 900;
+}
+
+.profile-contest-rank strong {
+    color: #111827;
+    font-size: 1.45rem;
+    line-height: 1;
+}
+
+.profile-contest-main h3 {
+    margin: 0 0 8px;
+    color: #0f172a;
+    font-size: 1rem;
+}
+
+.profile-contest-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.profile-contest-meta span {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.profile-contest-score {
+    text-align: right;
+}
+
+.profile-contest-score strong,
+.profile-contest-score span {
+    display: block;
+}
+
+.profile-contest-score strong {
+    color: #0f172a;
+    font-size: 1.55rem;
+    line-height: 1;
+}
+
+.profile-contest-score span {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
 .profile-panel {
     padding: 20px;
 }
@@ -533,7 +629,8 @@
 
     .profile-identity,
     .course-card-main,
-    .solved-task-card {
+    .solved-task-card,
+    .profile-contest-card {
         grid-template-columns: 1fr;
     }
 
@@ -550,6 +647,10 @@
     }
 
     .task-result-meta {
+        text-align: left;
+    }
+
+    .profile-contest-score {
         text-align: left;
     }
 }

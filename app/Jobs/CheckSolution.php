@@ -47,7 +47,7 @@ class CheckSolution implements ShouldQueue
             $notification = $this->createNotifacation('The task was deleted', NotificationType::TASK_ERROR, $this->userId);
             $notification->save();
 
-            event(new SendNotification($notification));
+            event(new SendNotification($notification, $this->taskId));
 
             return;
         }
@@ -75,7 +75,7 @@ class CheckSolution implements ShouldQueue
             $notification->save();
 
             event(new SendResultSolution($attempt, $notification->id));
-            event(new SendNotification($notification));
+            event(new SendNotification($notification, $this->taskId));
 
             return;
         }
@@ -108,7 +108,7 @@ class CheckSolution implements ShouldQueue
         $notification->save();
 
         event(new SendResultSolution($attempt, $notification->id));
-        event(new SendNotification($notification));
+        event(new SendNotification($notification, $this->taskId));
         event(new AdminDashboardUpdated(
             $result->isAccepted() ? 'success' : 'attempt',
             $result->isAccepted() ? 'Accepted' : 'Новая попытка',

@@ -6,27 +6,42 @@ use App\Models\Task\Attempt;
 use App\Models\Task\Contest;
 use App\Models\Task\ContestParticipant;
 use App\Models\Task\Task;
-use App\Service\Task\TaskStatus;
+use App\Service\Contest\ContestLeaderboardService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ContestController extends Controller
 {
-    public function index(): View
+    public function index(ContestLeaderboardService $leaderboardService): View
     {
+        $finishedContests = Contest::query()
+            ->where('is_active', true)
+            ->whereNotNull('ends_at')
+            ->where('ends_at', '<', now())
+            ->withCount(['tasks', 'participants'])
+            ->latest('ends_at')
+            ->limit(6)
+            ->get()
+            ->map(function (Contest $contest) use ($leaderboardService) {
+                $winner = $leaderboardService->leaderboard($contest->id, 1)->first();
+                $contest->winner = $winner && $winner->solved > 0 ? $winner : null;
+
+                return $contest;
+            });
+
         return view('contest.index', [
             'contests' => Contest::query()
                 ->where('is_active', true)
+                ->where(fn($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>=', now()))
                 ->withCount(['tasks', 'participants'])
                 ->orderByDesc('starts_at')
                 ->paginate(10),
+            'finishedContests' => $finishedContests,
         ]);
     }
 
-    public function show(Contest $contest): View
+    public function show(Contest $contest, ContestLeaderboardService $leaderboardService): View
     {
         abort_unless($contest->is_active || Auth::user()?->is_admin, 404);
 
@@ -36,16 +51,7 @@ class ContestController extends Controller
             && ContestParticipant::where('contest_id', $contest->id)->where('user_id', Auth::id())->exists();
 
         $leaderboard = $isStarted
-            ? DB::table('attempt_solution as a')
-                ->join('users as u', 'u.id', '=', 'a.user_id')
-                ->where('a.status', TaskStatus::COMPLETED->value)
-                ->where('a.contest_id', $contest->id)
-                ->select('u.id', 'u.name', DB::raw('COUNT(DISTINCT a.task_id) as solved'))
-                ->groupBy('u.id', 'u.name')
-                ->orderByDesc('solved')
-                ->orderByRaw('MIN(a.created_at) asc')
-                ->limit(10)
-                ->get()
+            ? $leaderboardService->leaderboard($contest->id, 20)
             : collect();
 
         return view('contest.show', [

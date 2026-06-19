@@ -73,6 +73,8 @@ WORKDIR /workspace</code>
                 <code>php artisan judge:install-python-pandas</code>
                 Образ для FastAPI/API-задач:
                 <code>php artisan judge:install-python-fastapi</code>
+                Образ для изучения Keras/ML:
+                <code>php artisan judge:install-python-keras</code>
             </div>
 
             <div class="preset-actions">
@@ -89,6 +91,11 @@ WORKDIR /workspace</code>
                 <form action="{{ route('admin.environments.install-fastapi') }}" method="POST" class="install-default-form">
                     @csrf
                     <button type="submit" class="btn btn-primary">Собрать Python FastAPI-образ</button>
+                </form>
+
+                <form action="{{ route('admin.environments.install-keras') }}" method="POST" class="install-default-form">
+                    @csrf
+                    <button type="submit" class="btn btn-primary">Собрать Python Keras-образ</button>
                 </form>
             </div>
         </section>

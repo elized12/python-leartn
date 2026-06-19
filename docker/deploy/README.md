@@ -45,6 +45,7 @@ docker compose exec app php artisan migrate --force
 docker compose exec app php artisan judge:install-python
 docker compose exec app php artisan judge:install-python-pandas
 docker compose exec app php artisan judge:install-python-fastapi
+docker compose exec app php artisan judge:install-python-keras
 ```
 
 7. Установите модель Ollama:

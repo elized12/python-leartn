@@ -108,6 +108,7 @@ APP_RUN_MIGRATIONS=true
 docker compose exec app php artisan judge:install-python
 docker compose exec app php artisan judge:install-python-pandas
 docker compose exec app php artisan judge:install-python-fastapi
+docker compose exec app php artisan judge:install-python-keras
 ```
 
 9. Установите модель Ollama для ИИ-подсказок:

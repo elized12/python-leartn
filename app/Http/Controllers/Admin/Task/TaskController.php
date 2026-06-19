@@ -12,6 +12,7 @@ use App\Models\Task\Task;
 use App\Models\Task\Test;
 use App\Models\User;
 use App\Service\Task\CodeJudgeService;
+use App\Service\Task\JudgeRunResult;
 use App\Service\Task\TaskStatus;
 use Exception;
 use Illuminate\Contracts\View\View;
@@ -101,7 +102,7 @@ class TaskController extends Controller
                 $judgeResult = app(CodeJudgeService::class)->run($task->fresh(['environment', 'files']), $referenceSolution);
 
                 if (!$judgeResult->isAccepted()) {
-                    throw new Exception('Авторское решение не прошло проверку: ' . $judgeResult->description);
+                    throw new Exception($this->buildJudgeFailureMessage($judgeResult, $request, $task));
                 }
 
                 event(new AdminDashboardUpdated(
@@ -248,7 +249,7 @@ class TaskController extends Controller
 
                 $judgeResult = app(CodeJudgeService::class)->run($task->fresh(['environment', 'files']), $referenceSolution);
                 if (!$judgeResult->isAccepted()) {
-                    throw new Exception('Авторское решение не прошло проверку: ' . $judgeResult->description);
+                    throw new Exception($this->buildJudgeFailureMessage($judgeResult, $request, $task));
                 }
 
                 foreach (array_unique($pathsToDelete) as $path) {
@@ -358,6 +359,91 @@ class TaskController extends Controller
         }
 
         return $payload;
+    }
+
+    private function buildJudgeFailureMessage(JudgeRunResult $result, Request $request, Task $task): string
+    {
+        $runnerMode = $request->input('runner_mode') === 'runner' ? 'runner.py' : 'solution.py';
+        $checkerType = $request->input('checker_type') === 'custom' ? 'custom checker.py' : 'стандартный checker';
+        $environment = $task->environment
+            ? "{$task->environment->name} ({$task->environment->docker_image_name})"
+            : 'не найдено';
+
+        $lines = [
+            'Авторское решение не прошло проверку.',
+            '',
+            'Где сломалось:',
+            '- Статус: ' . $this->humanTaskStatus($result->status),
+            '- Тест: ' . ($result->failedTestNumber ? "#{$result->failedTestNumber}" : 'не определён'),
+            "- Запуск: {$runnerMode}",
+            "- Проверка ответа: {$checkerType}",
+            "- Окружение: {$environment}",
+        ];
+
+        if ($result->executionTimeS !== null) {
+            $lines[] = '- Время: ' . $result->executionTimeS . ' сек.';
+        }
+
+        if ($result->peakMemoryUsageMb !== null) {
+            $lines[] = '- Память: ' . $result->peakMemoryUsageMb . ' МБ';
+        }
+
+        $lines[] = '';
+        $lines[] = 'Детали ошибки:';
+        $lines[] = $result->description ?: 'Docker-запуск завершился без подробного вывода.';
+
+        $hints = $this->judgeFailureHints($result, $request);
+        if ($hints !== []) {
+            $lines[] = '';
+            $lines[] = 'Что проверить:';
+            foreach ($hints as $hint) {
+                $lines[] = "- {$hint}";
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function humanTaskStatus(TaskStatus $status): string
+    {
+        return match ($status) {
+            TaskStatus::INCORRECT_RESULT => 'неправильный ответ',
+            TaskStatus::MEMORY_LIMIT => 'превышен лимит памяти',
+            TaskStatus::TIME_LIMIT => 'превышен лимит времени',
+            TaskStatus::OTHER_ERROR => 'ошибка выполнения',
+            TaskStatus::PENDING => 'ожидает проверки',
+            TaskStatus::COMPLETED => 'выполнено',
+        };
+    }
+
+    private function judgeFailureHints(JudgeRunResult $result, Request $request): array
+    {
+        $hints = [];
+
+        if ($request->input('runner_mode') === 'runner') {
+            $hints[] = 'Если используется runner.py, он должен импортировать код ученика из solution.py.';
+            $hints[] = 'Для FastAPI-задач в solution.py обычно должна быть переменная app = FastAPI().';
+        }
+
+        if ($result->status === TaskStatus::INCORRECT_RESULT) {
+            $hints[] = 'Сравните print/output runner-а с полем expected в tests.json.';
+            $hints[] = 'Стандартный checker сравнивает expected и output по токенам, поэтому для JSON/API-тестов часто проще печатать OK.';
+        }
+
+        if ($result->status === TaskStatus::OTHER_ERROR) {
+            $hints[] = 'Проверьте traceback выше: чаще всего это ошибка импорта, синтаксиса, отсутствующая библиотека или неверное имя файла.';
+            $hints[] = 'Убедитесь, что выбрано правильное окружение выполнения, например Python 3.12 FastAPI Judge для FastAPI-задач.';
+        }
+
+        if ($result->status === TaskStatus::TIME_LIMIT) {
+            $hints[] = 'Проверьте, нет ли бесконечного цикла, зависшего сервера или слишком маленького лимита времени.';
+        }
+
+        if ($result->status === TaskStatus::MEMORY_LIMIT) {
+            $hints[] = 'Увеличьте лимит памяти или проверьте, не загружает ли решение слишком большой датасет/модель.';
+        }
+
+        return array_values(array_unique($hints));
     }
 
     private function uploadedTaskFileIsPublic(Request $request, int $index): bool

@@ -76,7 +76,7 @@
                     <button type="button" class="close-alert">&times;</button>
                     <ul>
                         @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
+                            <li>{!! nl2br(e($error)) !!}</li>
                         @endforeach
                     </ul>
                 </div>

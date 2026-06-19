@@ -2,6 +2,7 @@
 
 use App\Console\Commands\InstallJudgePythonImage;
 use App\Console\Commands\InstallJudgePythonFastapiImage;
+use App\Console\Commands\InstallJudgePythonKerasImage;
 use App\Console\Commands\InstallJudgePythonPandasImage;
 use App\Http\Middleware\CheckAdmin;
 use App\Http\Middleware\EnsureEmailIsVerified;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         InstallJudgePythonImage::class,
         InstallJudgePythonFastapiImage::class,
+        InstallJudgePythonKerasImage::class,
         InstallJudgePythonPandasImage::class,
     ])
     ->withMiddleware(function (Middleware $middleware) {

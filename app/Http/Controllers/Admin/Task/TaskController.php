@@ -39,7 +39,11 @@ class TaskController extends Controller
 
     public function createTask(Request $request): RedirectResponse
     {
-        $request->validate($this->validationRules());
+        $request->validate(
+            $this->validationRules(),
+            $this->validationMessages(),
+            $this->validationAttributes()
+        );
 
         $storedPaths = [];
 
@@ -151,7 +155,11 @@ class TaskController extends Controller
     public function updateTask(Request $request, Task $task): RedirectResponse
     {
         $task->load('categories');
-        $request->validate($this->validationRules($task));
+        $request->validate(
+            $this->validationRules($task),
+            $this->validationMessages(),
+            $this->validationAttributes()
+        );
 
         $storedPaths = [];
 
@@ -328,6 +336,37 @@ class TaskController extends Controller
         ];
     }
 
+    private function validationMessages(): array
+    {
+        return [
+            'runner_file.required_if' => 'Загрузите файл runner.py, потому что выбран режим запуска через runner.',
+            'checker_file.required_if' => 'Загрузите файл checker.py, потому что выбран custom checker.',
+            'tests_json_content.required_without' => 'Заполните tests.json или загрузите файл tests.json.',
+            'reference_solution.required_without' => 'Добавьте авторское решение или загрузите файл reference_solution.py.',
+            'category_ids.required' => 'Выберите хотя бы одну категорию задачи.',
+            'category_ids.min' => 'Выберите хотя бы одну категорию задачи.',
+            'execution_environment_id.required' => 'Выберите окружение выполнения.',
+        ];
+    }
+
+    private function validationAttributes(): array
+    {
+        return [
+            'title' => 'название задачи',
+            'description' => 'описание задачи',
+            'rating' => 'рейтинг',
+            'runner_file' => 'runner.py',
+            'checker_file' => 'checker.py',
+            'tests_json_file' => 'tests.json',
+            'tests_json_content' => 'содержимое tests.json',
+            'reference_solution' => 'авторское решение',
+            'reference_solution_file' => 'reference_solution.py',
+            'execution_environment_id' => 'окружение выполнения',
+            'time_limit_s' => 'лимит времени',
+            'memory_limit_mb' => 'лимит памяти',
+        ];
+    }
+
     private function readTestsPayload(Request $request): array
     {
         $rawJson = $request->hasFile('tests_json_file')
@@ -392,6 +431,17 @@ class TaskController extends Controller
         $lines[] = 'Детали ошибки:';
         $lines[] = $result->description ?: 'Docker-запуск завершился без подробного вывода.';
 
+        if ($result->input !== null || $result->expected !== null || $result->output !== null) {
+            $lines[] = '';
+            $lines[] = 'Данные теста:';
+            $lines[] = '--- input ---';
+            $lines[] = $this->formatJudgeValue($result->input);
+            $lines[] = '--- expected ---';
+            $lines[] = $this->formatJudgeValue($result->expected);
+            $lines[] = '--- output ---';
+            $lines[] = $this->formatJudgeValue($result->output);
+        }
+
         $hints = $this->judgeFailureHints($result, $request);
         if ($hints !== []) {
             $lines[] = '';
@@ -402,6 +452,24 @@ class TaskController extends Controller
         }
 
         return implode("\n", $lines);
+    }
+
+    private function formatJudgeValue(?string $value): string
+    {
+        if ($value === null) {
+            return '<нет данных>';
+        }
+
+        if ($value === '') {
+            return '<пусто>';
+        }
+
+        $limit = 2000;
+        if (mb_strlen($value) > $limit) {
+            return mb_substr($value, 0, $limit) . "\n... <обрезано, всего символов: " . mb_strlen($value) . '>';
+        }
+
+        return $value;
     }
 
     private function humanTaskStatus(TaskStatus $status): string

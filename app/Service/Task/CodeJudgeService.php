@@ -83,7 +83,10 @@ class CodeJudgeService
                         $this->buildRuntimeDescription($status, $testNumber, $this->cleanProcessErrorOutput($solutionProcess)),
                         $testNumber,
                         $executionTimeS,
-                        $peakMemoryUsageMb
+                        $peakMemoryUsageMb,
+                        $input,
+                        $expected,
+                        $solutionProcess->getOutput()
                     );
                 }
 
@@ -100,7 +103,10 @@ class CodeJudgeService
                         $checkerResult['message'] ?: "Неправильный ответ на тесте {$testNumber}",
                         $testNumber,
                         $executionTimeS,
-                        $peakMemoryUsageMb
+                        $peakMemoryUsageMb,
+                        $input,
+                        $expected,
+                        $output
                     );
                 }
             }

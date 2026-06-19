@@ -10,6 +10,9 @@ class JudgeRunResult
         public readonly ?int $failedTestNumber = null,
         public readonly ?float $executionTimeS = null,
         public readonly ?float $peakMemoryUsageMb = null,
+        public readonly ?string $input = null,
+        public readonly ?string $expected = null,
+        public readonly ?string $output = null,
     ) {}
 
     public function isAccepted(): bool

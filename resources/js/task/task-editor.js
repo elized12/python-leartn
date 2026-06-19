@@ -542,8 +542,14 @@ function finishAiHintStream() {
     container.classList.remove('is-loading', 'is-streaming');
 }
 
+function markAiHintSaved(attemptId) {
+    document.querySelectorAll(`.ai-hint-button[data-ai-attempt-id="${attemptId}"]`).forEach((button) => {
+        button.textContent = 'Открыть подсказку';
+    });
+}
+
 function setAiHintAvailable(attemptId = null) {
-    document.querySelectorAll('.ai-hint-button').forEach((button) => {
+    document.querySelectorAll('.editor-actions .ai-hint-button').forEach((button) => {
         button.disabled = false;
         if (attemptId) {
             button.dataset.aiAttemptId = attemptId;
@@ -552,7 +558,7 @@ function setAiHintAvailable(attemptId = null) {
 }
 
 function setAiHintUnavailable() {
-    document.querySelectorAll('.ai-hint-button').forEach((button) => {
+    document.querySelectorAll('.editor-actions .ai-hint-button').forEach((button) => {
         button.disabled = true;
         delete button.dataset.aiAttemptId;
     });
@@ -603,6 +609,13 @@ async function requestAiHint(attemptId = null) {
             return;
         }
 
+        if (data.state === 'done' && data.hint) {
+            aiHintCache.set(String(data.attempt_id || attemptId), data.hint);
+            setAiHintContent(data.hint);
+            markAiHintSaved(data.attempt_id || attemptId);
+            return;
+        }
+
         currentAiHintRequest = {
             requestId: data.request_id,
             attemptId: Number(data.attempt_id || attemptId),
@@ -650,6 +663,7 @@ function handleAiHintEvent(event) {
     if (event.state === 'done') {
         aiHintPendingAttempts.delete(cacheKey);
         aiHintCache.set(cacheKey, currentAiHintRequest.fullHint);
+        markAiHintSaved(currentAiHintRequest.attemptId);
         finishAiHintStream();
         currentAiHintRequest = null;
         return;
@@ -745,10 +759,14 @@ function addAttemptToList(attempt) {
         <div class="attempt-metrics">
             <span>${escapeHtml(time)} сек.</span>
             <span>${escapeHtml(memory)} МБ</span>
+            ${isSuccess ? '' : `<button type="button" class="ai-hint-button attempt-ai-hint-button" data-ai-attempt-id="${escapeHtml(String(attempt.id))}">Спросить ИИ</button>`}
         </div>
     `;
 
     attemptsList.prepend(item);
+    item.querySelector('.attempt-ai-hint-button')?.addEventListener('click', (event) => {
+        requestAiHint(event.currentTarget.dataset.aiAttemptId || null);
+    });
 
     const counter = document.querySelector('.task-tab[data-tab="attempts"] small');
     if (counter) {

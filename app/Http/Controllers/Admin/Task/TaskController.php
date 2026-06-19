@@ -302,7 +302,7 @@ class TaskController extends Controller
             'title' => 'required|string',
             'description' => 'required|string',
             'example' => 'string|nullable',
-            'category_ids' => 'array|nullable',
+            'category_ids' => 'required|array|min:1',
             'category_ids.*' => 'integer|exists:task_category,id',
             'rating' => 'required|integer|min:0|max:5000',
             'runner_mode' => 'required|in:solution,runner',

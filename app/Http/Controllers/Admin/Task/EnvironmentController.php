@@ -104,6 +104,23 @@ class EnvironmentController extends Controller
             ->with('success', 'Сборка Python pandas-образа отправлена в очередь');
     }
 
+    public function installFastapi(): RedirectResponse
+    {
+        BuildDockerEnvironment::dispatch(
+            'Python 3.12 FastAPI Judge',
+            'python-learn/judge-python-fastapi:3.12',
+            'Окружение Python 3.12 для задач по FastAPI и API-тестированию: fastapi, uvicorn, pydantic, httpx, pytest и /usr/bin/time.',
+            true,
+            base_path('docker/judge-python-fastapi'),
+            false,
+            ['fastapi', 'uvicorn', 'pydantic', 'httpx', 'pytest']
+        );
+
+        return redirect()
+            ->route('admin.environments.index')
+            ->with('success', 'Сборка Python FastAPI-образа отправлена в очередь');
+    }
+
     public function update(Request $request, Environment $environment): RedirectResponse
     {
         $data = $request->validate([

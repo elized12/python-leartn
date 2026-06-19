@@ -52,6 +52,11 @@ class GenerateAiHint implements ShouldQueue
                 event($this->event('chunk', content: $chunk));
             });
 
+            $attempt->forceFill([
+                'ai_hint' => trim($hint),
+                'ai_hint_generated_at' => now(),
+            ])->saveQuietly();
+
             event($this->event('done'));
         } catch (Throwable $exception) {
             $this->storeError($exception->getMessage());

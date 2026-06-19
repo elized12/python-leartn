@@ -24,6 +24,8 @@ class Attempt extends Model
         'description',
         'code',
         'prompt_template_id',
+        'ai_hint',
+        'ai_hint_generated_at',
         'knowledge_traced_at',
     ];
 
@@ -31,6 +33,7 @@ class Attempt extends Model
         'status' => TaskStatus::class,
         'peak_memory_usage_mb' => 'float',
         'execution_time_s' => 'float',
+        'ai_hint_generated_at' => 'datetime',
         'knowledge_traced_at' => 'datetime',
     ];
 

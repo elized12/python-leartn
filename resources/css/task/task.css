@@ -983,6 +983,8 @@ body {
 
 .attempt-metrics {
     display: flex;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
@@ -1040,6 +1042,12 @@ body {
     cursor: not-allowed;
     opacity: 0.52;
     transform: none;
+}
+
+.attempt-ai-hint-button {
+    min-height: 27px;
+    padding: 3px 9px;
+    font-size: 0.8rem;
 }
 
 .solution-form .task-card {

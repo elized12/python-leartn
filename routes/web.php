@@ -175,6 +175,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/environments/install-pandas', [AdminEnvironmentController::class, 'installPandas'])
             ->name('admin.environments.install-pandas');
 
+        Route::post('/admin/environments/install-fastapi', [AdminEnvironmentController::class, 'installFastapi'])
+            ->name('admin.environments.install-fastapi');
+
         Route::put('/admin/environments/{environment}', [AdminEnvironmentController::class, 'update'])
             ->name('admin.environments.update');
 

@@ -1,352 +1,98 @@
-# Code master
+# Code Master
 
-Веб-платформа для обучения Python: курсы, уроки, задачи, автоматическая проверка решений в Docker, рейтинг пользователей, админ-панель, websocket-уведомления через Reverb и подсказки от локальной нейросети через Ollama.
+**Code Master** - образовательная веб-платформа для изучения Python. Проект объединяет курсы, интерактивные уроки, автоматическую проверку решений, контесты, рейтинг пользователей, нейросетевые подсказки и модель отслеживания знаний по темам.
 
-## Что входит в Docker-сборку
+Платформа разрабатывается как дипломный проект и ориентирована на школьников, которые только начинают программировать. Главная идея - не просто проверить ответ, а помочь ученику понять ошибку, увидеть прогресс и получить следующую подходящую задачу.
 
-- `app` - Laravel/PHP-FPM приложение.
-- `nginx` - веб-сервер для сайта.
-- `reverb` - websocket-сервер Laravel Reverb.
-- `queue-solution` - очередь проверки решений задач.
-- `queue-ai` - очередь генерации подсказок нейросетью.
-- `queue-docker` - очередь сборки Docker-окружений из админ-панели.
-- `scheduler` - Laravel scheduler.
-- `mysql` - база данных.
-- `redis` - очереди и cache.
-- `ollama` - локальная нейросеть для подсказок.
+## Возможности
 
-## Требования к серверу
+- Курсы с уроками, прогрессом и разными типами учебных блоков.
+- Практические задачи с редактором кода в стиле LeetCode/NeetCode.
+- Автоматическая проверка Python-решений в изолированных Docker-контейнерах.
+- Ограничения по времени, памяти и объему вывода.
+- Публичные тесты, примеры, Markdown-описания и комментарии к задачам.
+- Нейросетевые подсказки через Ollama после неудачных отправок.
+- Потоковый вывод ответа ИИ и очередь ожидания подсказки.
+- Контесты с таймером, скрытыми задачами до старта, таблицей лидеров и онлайн-попытками.
+- Рейтинг пользователей с учетом сложности задач и количества попыток.
+- Bayesian Knowledge Tracing для оценки навыков по категориям задач.
+- Рекомендации задач и курсов на основе слабых тем ученика.
+- Админ-панель для управления задачами, курсами, пользователями, окружениями, контестами, ИИ и ВКТ.
+- WebSocket-уведомления и онлайн-обновления админ-панели через Laravel Reverb.
 
-На сервере должны быть установлены:
+## Основные разделы
 
-- Docker
-- Docker Compose plugin
-- Git
+### Курсы
 
-Также нужен исходящий доступ к:
+Курсы состоят из уроков и блоков. В уроках можно использовать текст, Markdown, изображения, видео, редактируемый код и блоки с привязанными задачами. Пользователь может отмечать уроки пройденными, а система считает прогресс по курсу.
 
-- `deb.debian.org`
-- `registry.npmjs.org`
-- `repo.packagist.org`
-- `github.com`
+### Задачи
 
-Иначе первая сборка не сможет скачать зависимости.
+Для задач реализованы категории, сложность, публичные тесты, стартовый код, авторское решение, дополнительные файлы и кастомные окружения. На странице задачи слева отображается условие и вкладки, справа - редактор кода.
 
-## Быстрый запуск на сервере
+### Проверка решений
 
-1. Склонируйте проект и перейдите в папку:
+Решения запускаются в Docker-контейнерах. Система измеряет статус, время выполнения и пиковое потребление памяти. Проверка вынесена в отдельную очередь, поэтому количество воркеров можно регулировать под возможности сервера.
 
-```bash
-git clone <URL_РЕПОЗИТОРИЯ> python-learn
-cd python-learn
-```
+### ИИ-помощник
 
-2. Создайте `.env` из серверного шаблона:
+После неправильной отправки ученик может запросить подсказку. В контекст модели передаются условие задачи, код ученика, сообщение проверяющей системы, публичные тесты и файлы задачи. Промт запрещает выдавать готовое решение и направляет ученика к самостоятельному исправлению.
 
-```bash
-cp .env.server.example .env
-```
+### ВКТ / BKT
 
-3. Заполните в `.env` минимум эти значения:
+Категория задачи считается отдельным навыком. До первого Accepted по задаче каждая попытка влияет на вероятность знания темы: ошибки уменьшают вероятность, первый Accepted увеличивает. После первого успешного решения эта задача больше не влияет на ВКТ. Также учитывается сложность: легкие задачи не могут поднять навык выше заданного потолка.
 
-```dotenv
-APP_URL=http://YOUR_DOMAIN_OR_IP
-VITE_REVERB_HOST=YOUR_DOMAIN_OR_IP
-DB_PASSWORD=CHANGE_ME_DB_PASSWORD
-DB_ROOT_PASSWORD=CHANGE_ME_ROOT_PASSWORD
-REVERB_APP_KEY=CHANGE_ME_REVERB_KEY
-REVERB_APP_SECRET=CHANGE_ME_REVERB_SECRET
-```
+### Контесты
 
-Для проверки решений внутри Docker Laravel запускает отдельные judge-контейнеры. Они должны видеть тот же `storage` volume, что и контейнер `app`. Если проект лежит, например, в папке `app-python-learn`, Docker Compose обычно создаёт volume `app-python-learn_app_storage`. Укажите это имя в двух переменных:
+Администратор может создать контест, выбрать время старта, длительность и задачи. До начала задачи скрыты. После старта пользователи видят список задач, отправляют решения, а таблица лидеров и попытки обновляются онлайн.
 
-```dotenv
-APP_STORAGE_VOLUME=app-python-learn_app_storage
-JUDGE_STORAGE_VOLUME=app-python-learn_app_storage
-JUDGE_DOCKER_UID=33
-JUDGE_DOCKER_GID=33
-```
+## Технологии
 
-Проверить реальное имя можно командой:
+- **Backend:** Laravel, PHP 8.3
+- **Frontend:** Blade, JavaScript, Vite
+- **Database:** MySQL
+- **Queues / Cache:** Redis
+- **Realtime:** Laravel Reverb
+- **Code runner:** Docker
+- **AI hints:** Ollama
+- **Web server:** Nginx
+- **Deployment:** Docker Compose
 
-```bash
-docker volume ls | grep app_storage
-```
+## Архитектура Docker-сборки
 
-Для генерации случайных ключей можно использовать:
+В Docker Compose входят сервисы:
 
-```bash
-openssl rand -hex 16
-```
+- `app` - Laravel/PHP-FPM приложение;
+- `nginx` - веб-сервер;
+- `mysql` - база данных;
+- `redis` - очереди и кэш;
+- `reverb` - WebSocket-сервер;
+- `queue-solution` - воркеры проверки решений;
+- `queue-ai` - воркеры нейросетевых подсказок;
+- `queue-docker` - сборка Docker-окружений из админ-панели;
+- `scheduler` - Laravel scheduler;
+- `ollama` - локальный сервер моделей.
 
-4. Сгенерируйте `APP_KEY`:
+## Безопасность запуска кода
 
-```bash
-docker compose run --rm app php artisan key:generate --show
-```
+Пользовательский код запускается отдельно от Laravel-приложения. Для judge-контейнеров используются ограничения Docker, лимиты времени, памяти, вывода и запрет лишних привилегий. Это снижает риск зависаний, бесконечного вывода и влияния пользовательского кода на основной сайт.
 
-Вставьте результат в `.env`:
+## Для дипломной работы
 
-```dotenv
-APP_KEY=base64:...
-```
+Проект удобно описывать как систему, которая объединяет:
 
-5. Соберите и запустите контейнеры:
+- управление учебным контентом;
+- практическое решение задач;
+- автоматическую проверку программ;
+- интеллектуальную поддержку ученика;
+- аналитику знаний и прогресса;
+- соревновательные механики.
 
-```bash
-docker compose up -d --build
-```
+В дипломе можно раскрыть архитектуру платформы, модель данных, запуск кода в изолированной среде, очереди, WebSocket-обновления, промтинг ИИ-помощника, модель Bayesian Knowledge Tracing и методику оценки качества подсказок.
 
-Миграции запускаются автоматически при старте `app`, если в `.env` стоит:
+## Установка
 
-```dotenv
-APP_RUN_MIGRATIONS=true
-```
+Подробная инструкция по установке и запуску вынесена в отдельный файл:
 
-6. Соберите Docker-образы для проверки пользовательского Python-кода:
+[INSTALL.md](INSTALL.md)
 
-```bash
-docker compose exec app php artisan judge:install-python
-docker compose exec app php artisan judge:install-python-pandas
-```
-
-7. Установите модель Ollama для подсказок:
-
-```bash
-curl http://127.0.0.1:11434/api/pull -d '{"name":"qwen2.5-coder:3b","stream":false}'
-```
-
-Модель также можно установить из админ-панели в разделе `Нейросеть`.
-
-## Важные переменные окружения
-
-### Сайт
-
-```dotenv
-APP_URL=http://YOUR_DOMAIN_OR_IP
-APP_HTTP_PORT=80
-APP_DEBUG=false
-APP_RUN_MIGRATIONS=true
-```
-
-### База данных
-
-В Docker Compose база доступна приложению по имени сервиса `mysql`:
-
-```dotenv
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_PORT=3306
-DB_DATABASE=python_learn
-DB_USERNAME=python_learn
-DB_PASSWORD=CHANGE_ME_DB_PASSWORD
-DB_ROOT_PASSWORD=CHANGE_ME_ROOT_PASSWORD
-```
-
-Не ставьте `DB_HOST=127.0.0.1` внутри Docker-сборки, иначе Laravel будет искать MySQL внутри своего контейнера.
-
-### Redis и очереди
-
-```dotenv
-CACHE_STORE=redis
-QUEUE_CONNECTION=redis
-REDIS_CLIENT=predis
-REDIS_HOST=redis
-QUEUE_SOLUTION_CHECKS=solution-checks
-QUEUE_AI_HINTS=ai-hints
-QUEUE_DOCKER_BUILDS=docker-builds
-QUEUE_SOLUTION_WORKERS=6
-QUEUE_AI_WORKERS=2
-QUEUE_DOCKER_WORKERS=1
-QUEUE_SOLUTION_TIMEOUT=120
-QUEUE_AI_TIMEOUT=240
-QUEUE_DOCKER_TIMEOUT=1500
-```
-
-### Websocket/Reverb
-
-Backend внутри Docker обращается к сервису `reverb`, а браузер пользователя подключается к публичному домену/IP:
-
-```dotenv
-BROADCAST_CONNECTION=reverb
-REVERB_HOST=reverb
-REVERB_PORT=8080
-REVERB_SCHEME=http
-REVERB_PUBLIC_PORT=8080
-
-VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
-VITE_REVERB_HOST="YOUR_DOMAIN_OR_IP"
-VITE_REVERB_PORT="${REVERB_PUBLIC_PORT}"
-VITE_REVERB_SCHEME=http
-```
-
-Если меняете `VITE_REVERB_*`, пересоберите контейнеры:
-
-```bash
-docker compose up -d --build
-```
-
-Эти значения попадают в JavaScript во время `vite build`.
-
-### Ollama
-
-```dotenv
-OLLAMA_ENABLED=true
-OLLAMA_URL=http://ollama:11434/api/chat
-OLLAMA_MODEL=qwen2.5-coder:3b
-OLLAMA_TIMEOUT=120
-OLLAMA_PULL_TIMEOUT=600
-OLLAMA_PUBLIC_PORT=11434
-```
-
-Ollama в compose опубликована только на `127.0.0.1:11434`, чтобы API модели не торчал наружу.
-
-## Очереди
-
-Проверка задач и подсказки ИИ вынесены в разные очереди:
-
-- `solution-checks` - проверка решений.
-- `ai-hints` - подсказки нейросети.
-- `docker-builds` - сборка Docker-образов окружений из админ-панели.
-
-Количество воркеров задается в `.env`:
-
-```dotenv
-QUEUE_SOLUTION_WORKERS=6
-QUEUE_AI_WORKERS=2
-QUEUE_DOCKER_WORKERS=1
-```
-
-После изменения количества воркеров перезапустите сервисы:
-
-```bash
-docker compose up -d
-```
-
-Один контейнер `queue-solution` поднимет внутри себя `QUEUE_SOLUTION_WORKERS` процессов `queue:work`, `queue-ai` поднимет `QUEUE_AI_WORKERS`, а `queue-docker` поднимет `QUEUE_DOCKER_WORKERS`.
-
-Посмотреть логи очередей:
-
-```bash
-docker compose logs -f queue-solution
-docker compose logs -f queue-ai
-docker compose logs -f queue-docker
-```
-
-## Админ-панель: Docker-образы и модели ИИ
-
-Через админ-панель можно собирать Docker-окружения для задач. В разделе окружений можно загрузить Dockerfile, указать имя образа, и сборка уйдет в очередь `docker-builds`. После успешной сборки окружение автоматически появится в списке и его можно выбрать у задачи.
-
-Там же есть кнопки для стандартных образов:
-
-```bash
-python-learn/judge-python:3.12
-python-learn/judge-python-pandas:3.12
-```
-
-Модели ИИ управляются в разделе `Нейросеть`. Админка показывает текущую модель, список установленных моделей Ollama, позволяет выбрать активную модель и скачать новую через Ollama pull.
-
-## Проверка пользовательского кода
-
-Laravel-контейнер использует Docker socket хоста:
-
-```yaml
-/var/run/docker.sock:/var/run/docker.sock
-```
-
-Это нужно, чтобы сервис проверки мог запускать изолированные контейнеры для пользовательских решений. На сервере Docker должен быть установлен и запущен.
-
-Стандартные judge-образы собираются командами:
-
-```bash
-docker compose exec app php artisan judge:install-python
-docker compose exec app php artisan judge:install-python-pandas
-```
-
-## Полезные команды
-
-Статус контейнеров:
-
-```bash
-docker compose ps
-```
-
-Логи всего проекта:
-
-```bash
-docker compose logs -f
-```
-
-Логи Laravel:
-
-```bash
-docker compose exec app tail -f storage/logs/laravel.log
-```
-
-Очистить и заново собрать Laravel cache:
-
-```bash
-docker compose exec app php artisan optimize:clear
-docker compose exec app php artisan config:cache
-docker compose exec app php artisan route:cache
-```
-
-Выполнить миграции:
-
-```bash
-docker compose exec app php artisan migrate --force
-```
-
-Остановить проект:
-
-```bash
-docker compose down
-```
-
-Остановить проект и удалить данные MySQL/Redis/Ollama:
-
-```bash
-docker compose down -v
-```
-
-Осторожно: `docker compose down -v` удалит данные базы, Redis и скачанные модели Ollama.
-
-## Обновление проекта на сервере
-
-```bash
-git pull
-docker compose up -d --build
-docker compose exec app php artisan migrate --force
-docker compose exec app php artisan optimize:clear
-```
-
-После изменения `VITE_REVERB_*`, frontend-файлов, `package.json` или `vite.config.js` обязательно нужна пересборка через `--build`.
-
-## Локальная разработка без Docker
-
-Если запускаете Laravel локально, а не в Docker:
-
-```bash
-composer install
-npm install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate
-npm run dev
-composer run serve
-```
-
-`composer run serve` запускает локальный сервер Laravel с увеличенными лимитами загрузки файлов: видео до 200 МБ. Если запускать обычный `php artisan serve`, PHP может оставить стандартный лимит `upload_max_filesize = 2M`, и загрузка видео будет падать с ошибкой 422.
-
-Для очередей локально:
-
-```bash
-php artisan queue:work --queue=solution-checks
-php artisan queue:work --queue=ai-hints
-```
-
-Для websocket:
-
-```bash
-php artisan reverb:start
-```

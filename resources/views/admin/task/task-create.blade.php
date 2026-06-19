@@ -103,7 +103,7 @@
                 <div class="form-group">
                     <label>Категории</label>
                     <small class="field-hint">
-                        Можно выбрать только категории, которые уже созданы в админке.
+                        Выберите хотя бы одну категорию: по ней ВКТ будет обновлять навык ученика.
                     </small>
                     <div id="selected-categories" class="selected-categories">
                         @foreach($categories->whereIn('id', $selectedCategoryIds) as $category)

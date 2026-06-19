@@ -268,6 +268,11 @@
                                 <div class="attempt-metrics">
                                     <span>{{ $attempt->execution_time_s ?? '—' }} сек.</span>
                                     <span>{{ $formatMemoryMb($attempt->peak_memory_usage_mb) }} МБ</span>
+                                    @if(!in_array($attempt->status->value, ['Completed', 'Pending'], true))
+                                        <button type="button" class="ai-hint-button attempt-ai-hint-button" data-ai-attempt-id="{{ $attempt->id }}">
+                                            {{ $attempt->ai_hint ? 'Открыть подсказку' : 'Спросить ИИ' }}
+                                        </button>
+                                    @endif
                                 </div>
                             </article>
                         @empty
@@ -360,7 +365,13 @@
                     <div class="editor-header">
                         <h3>Редактор кода</h3>
                         <div class="editor-actions">
-                            <button type="button" class="ai-hint-button" disabled>
+                            <button type="button" class="ai-hint-button"
+                                @if($latestAiHintAttempt)
+                                    data-ai-attempt-id="{{ $latestAiHintAttempt->id }}"
+                                @else
+                                    disabled
+                                @endif
+                            >
                                 Спросить ИИ
                             </button>
                             @if($hasSolvedTask)

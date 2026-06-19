@@ -129,6 +129,10 @@ class TaskController
             fn(Attempt $attempt) => $attempt->status === TaskStatus::COMPLETED
         );
 
+        $latestAiHintAttempt = $attempts->first(
+            fn(Attempt $attempt) => $this->attemptCanHaveAiHint($attempt)
+        );
+
         $bestByTime = $this->bestAcceptedAttempts($taskId)
             ->whereNotNull('execution_time_s')
             ->orderBy('execution_time_s')
@@ -155,6 +159,7 @@ class TaskController
             ]),
             'attempts' => $attempts,
             'hasSolvedTask' => $hasSolvedTask,
+            'latestAiHintAttempt' => $latestAiHintAttempt,
             'bestByTime' => $bestByTime,
             'bestByMemory' => $bestByMemory,
             'publicTests' => $this->publicTests($task),
@@ -194,6 +199,16 @@ class TaskController
                 'status' => false,
                 'message' => 'ИИ-подсказка доступна только после неудачной отправки решения.',
             ], 422);
+        }
+
+        if (filled($attempt->ai_hint)) {
+            return response()->json([
+                'status' => true,
+                'state' => 'done',
+                'attempt_id' => $attempt->id,
+                'hint' => $attempt->ai_hint,
+                'message' => 'Подсказка загружена из базы данных.',
+            ]);
         }
 
         $requestId = (string) Str::uuid();
@@ -296,6 +311,14 @@ class TaskController
             ->where('id', $request->integer('attempt_id'))
             ->latest()
             ->first();
+    }
+
+    private function attemptCanHaveAiHint(Attempt $attempt): bool
+    {
+        return !in_array($attempt->status, [
+            TaskStatus::COMPLETED,
+            TaskStatus::PENDING,
+        ], true);
     }
 
     private function bestAcceptedAttempts(int $taskId)

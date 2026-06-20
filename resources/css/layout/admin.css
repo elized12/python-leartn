@@ -1138,6 +1138,147 @@ body {
     color: #047857;
 }
 
+.main-content nav[role="navigation"][aria-label*="Pagination"],
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 22px;
+    padding: 14px 16px;
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.main-content nav[role="navigation"][aria-label*="Pagination"] > div:first-child,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] > div:first-child {
+    display: none;
+}
+
+.main-content nav[role="navigation"][aria-label*="Pagination"] > div:last-child,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] > div:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+}
+
+.main-content nav[role="navigation"][aria-label*="Pagination"] p,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] p {
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.main-content nav[role="navigation"][aria-label*="Pagination"] p span,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] p span {
+    color: #0f172a;
+}
+
+.main-content nav[role="navigation"][aria-label*="Pagination"] a,
+.main-content nav[role="navigation"][aria-label*="Pagination"] span[aria-current] span,
+.main-content nav[role="navigation"][aria-label*="Pagination"] span[aria-disabled] span,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] a,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] span[aria-current] span,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] span[aria-disabled] span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    min-height: 38px;
+    margin-left: -1px;
+    padding: 8px 12px;
+    border: 1px solid #dbe3ef;
+    background: #ffffff;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.main-content nav[role="navigation"][aria-label*="Pagination"] a:hover,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] a:hover {
+    position: relative;
+    z-index: 1;
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.main-content nav[role="navigation"][aria-label*="Pagination"] span[aria-current] span,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] span[aria-current] span {
+    position: relative;
+    z-index: 2;
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.main-content nav[role="navigation"][aria-label*="Pagination"] span[aria-disabled] span,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] span[aria-disabled] span {
+    color: #94a3b8;
+    background: #f8fafc;
+    cursor: not-allowed;
+}
+
+.main-content nav[role="navigation"][aria-label*="Pagination"] svg,
+.contest-pagination nav[role="navigation"][aria-label*="Pagination"] svg {
+    width: 18px;
+    height: 18px;
+}
+
+.main-content .pagination,
+.contest-pagination .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 22px;
+    list-style: none;
+}
+
+.main-content .pagination .page-link,
+.main-content .pagination a,
+.main-content .pagination span,
+.contest-pagination .pagination .page-link,
+.contest-pagination .pagination a,
+.contest-pagination .pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.main-content .pagination .active .page-link,
+.main-content .pagination .active span,
+.contest-pagination .pagination .active .page-link,
+.contest-pagination .pagination .active span {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.main-content .pagination .disabled .page-link,
+.main-content .pagination .disabled span,
+.contest-pagination .pagination .disabled .page-link,
+.contest-pagination .pagination .disabled span {
+    color: #94a3b8;
+    background: #f8fafc;
+}
+
 @media (max-width: 992px) {
     .admin-container {
         flex-direction: column;
@@ -1186,5 +1327,31 @@ body {
 
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .main-content nav[role="navigation"][aria-label*="Pagination"],
+    .contest-pagination nav[role="navigation"][aria-label*="Pagination"] {
+        padding: 12px;
+    }
+
+    .main-content nav[role="navigation"][aria-label*="Pagination"] > div:first-child,
+    .contest-pagination nav[role="navigation"][aria-label*="Pagination"] > div:first-child {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .main-content nav[role="navigation"][aria-label*="Pagination"] > div:last-child,
+    .contest-pagination nav[role="navigation"][aria-label*="Pagination"] > div:last-child {
+        display: none;
+    }
+
+    .main-content nav[role="navigation"][aria-label*="Pagination"] > div:first-child a,
+    .main-content nav[role="navigation"][aria-label*="Pagination"] > div:first-child span,
+    .contest-pagination nav[role="navigation"][aria-label*="Pagination"] > div:first-child a,
+    .contest-pagination nav[role="navigation"][aria-label*="Pagination"] > div:first-child span {
+        width: 100%;
+        border-radius: 8px;
     }
 }

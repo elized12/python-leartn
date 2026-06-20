@@ -340,7 +340,7 @@ export default class QuizBlock extends IBlock {
     }
 
     renderTextEditor(question) {
-        const correctAnswer = question.options.find(o => o.correct)?.text || '';
+        const correctAnswer = question.options.find(o => o.correct)?.text ?? '';
         return `
             <div class="text-editor">
                 <label>Правильный ответ</label>
@@ -713,8 +713,8 @@ export default class QuizBlock extends IBlock {
             let options = [];
 
             if (type === 'text') {
-                const correctAnswer = editor.querySelector('.correct-answer-input')?.value.trim();
-                if (correctAnswer) {
+                const correctAnswer = editor.querySelector('.correct-answer-input')?.value.trim() ?? '';
+                if (!this.isBlank(correctAnswer)) {
                     options = [{
                         id: 1,
                         text: correctAnswer,
@@ -724,10 +724,10 @@ export default class QuizBlock extends IBlock {
             } else {
                 const optionItems = editor.querySelectorAll('.option-editor-item');
                 optionItems.forEach((optItem, idx) => {
-                    const optionText = optItem.querySelector('.option-text-input')?.value.trim();
+                    const optionText = optItem.querySelector('.option-text-input')?.value.trim() ?? '';
                     const isCorrect = optItem.querySelector('input[type="radio"], input[type="checkbox"]')?.checked;
 
-                    if (optionText) {
+                    if (!this.isBlank(optionText)) {
                         options.push({
                             id: idx + 1,
                             text: optionText,
@@ -793,10 +793,14 @@ export default class QuizBlock extends IBlock {
     }
 
     escapeHtml(text) {
-        if (!text) return '';
+        if (text === null || text === undefined) return '';
         const div = document.createElement('div');
-        div.textContent = text;
+        div.textContent = String(text);
         return div.innerHTML;
+    }
+
+    isBlank(value) {
+        return value === null || value === undefined || String(value).trim() === '';
     }
 
     showNotification(message, type = 'info') {

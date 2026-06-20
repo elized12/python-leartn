@@ -104,7 +104,7 @@ PROMPT;
 
     public function keepAlive(): string
     {
-        return (string) config('ollama.keep_alive', '5m');
+        return (string) config('ollama.keep_alive', '-1');
     }
 
     public function saveModel(string $model): void
@@ -113,6 +113,31 @@ PROMPT;
         $settings['model'] = $model;
 
         $this->saveSettings($settings);
+    }
+
+    public function warmModel(?string $model = null): void
+    {
+        $model ??= $this->currentModel();
+
+        $response = Http::timeout((int) config('ollama.timeout', 120))
+            ->acceptJson()
+            ->post($this->ollamaApiUrl('/api/generate'), [
+                'model' => $model,
+                'prompt' => '',
+                'stream' => false,
+                'keep_alive' => $this->keepAlive(),
+                'options' => array_filter([
+                    'num_predict' => 1,
+                    'temperature' => 0,
+                ], static fn($value) => $value !== null && $value !== ''),
+            ]);
+
+        if (!$response->successful()) {
+            $error = data_get($response->json(), 'error');
+            throw new RuntimeException($error
+                ? "Не удалось загрузить модель в память: {$error}"
+                : 'Не удалось загрузить модель в память. Проверьте, что Ollama запущена и модель установлена.');
+        }
     }
 
     public function systemPrompt(): string

@@ -38,6 +38,10 @@
                     <span>Chat endpoint</span>
                     <strong>{{ $ollamaChatUrl }}</strong>
                 </div>
+                <div class="stat-card">
+                    <span>Удержание в памяти</span>
+                    <strong>{{ $keepAlive }}</strong>
+                </div>
             </div>
 
             <form action="{{ route('admin.ai-settings.update') }}" method="POST" class="admin-form">
@@ -57,7 +61,8 @@
                         @endforeach
                     </select>
                     <span class="muted">
-                        Эта модель будет использоваться для подсказок после неправильной отправки решения.
+                        После сохранения модель сразу загрузится в Ollama. Значение <code>OLLAMA_KEEP_ALIVE=-1</code>
+                        удерживает её в оперативной памяти до перезапуска Ollama.
                     </span>
                 </label>
 

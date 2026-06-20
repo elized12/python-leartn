@@ -32,6 +32,7 @@ class AiSettingsController extends Controller
             'userPrompt' => $ollamaSettings->userPromptTemplate(),
             'promptVariables' => $ollamaSettings->promptVariables(),
             'aiOptions' => $ollamaSettings->currentOptions(),
+            'keepAlive' => $ollamaSettings->keepAlive(),
         ]);
     }
 
@@ -41,11 +42,18 @@ class AiSettingsController extends Controller
             'model' => ['required', 'string', 'max:120', 'regex:/^[a-zA-Z0-9_.:\/-]+$/'],
         ]);
 
-        $ollamaSettings->saveModel($data['model']);
+        try {
+            $ollamaSettings->warmModel($data['model']);
+            $ollamaSettings->saveModel($data['model']);
+        } catch (Throwable $exception) {
+            return redirect()
+                ->route('admin.ai-settings.index')
+                ->withErrors(['model' => $exception->getMessage()]);
+        }
 
         return redirect()
             ->route('admin.ai-settings.index')
-            ->with('success', "Модель подсказок изменена на {$data['model']}");
+            ->with('success', "Модель подсказок изменена на {$data['model']} и загружена в память");
     }
 
     public function install(Request $request, OllamaSettingsService $ollamaSettings): RedirectResponse
@@ -64,13 +72,20 @@ class AiSettingsController extends Controller
         }
 
         if ($request->boolean('make_active')) {
-            $ollamaSettings->saveModel($data['model']);
+            try {
+                $ollamaSettings->warmModel($data['model']);
+                $ollamaSettings->saveModel($data['model']);
+            } catch (Throwable $exception) {
+                return redirect()
+                    ->route('admin.ai-settings.index')
+                    ->withErrors(['model' => $exception->getMessage()]);
+            }
         }
 
         return redirect()
             ->route('admin.ai-settings.index')
             ->with('success', $request->boolean('make_active')
-                ? "Модель {$data['model']} установлена и выбрана для подсказок"
+                ? "Модель {$data['model']} установлена, выбрана для подсказок и загружена в память"
                 : "Модель {$data['model']} установлена");
     }
 

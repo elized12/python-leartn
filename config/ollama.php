@@ -9,5 +9,5 @@ return [
     'temperature' => (float) env('OLLAMA_TEMPERATURE', 0.2),
     'num_predict' => (int) env('OLLAMA_NUM_PREDICT', 550),
     'num_ctx' => (int) env('OLLAMA_NUM_CTX', 8192),
-    'keep_alive' => env('OLLAMA_KEEP_ALIVE', '5m'),
+    'keep_alive' => env('OLLAMA_KEEP_ALIVE', '-1'),
 ];

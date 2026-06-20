@@ -13,7 +13,7 @@ class Quiz implements BlockValidatorInterface
             return ['Неверный формат данных'];
         }
 
-        if (empty($blockArray['title'])) {
+        if ($this->isBlank($blockArray['title'] ?? null)) {
             $errors[] = 'Требуется заголовок теста';
         } elseif (mb_strlen($blockArray['title']) > 200) {
             $errors[] = 'Заголовок не должен превышать 200 символов';
@@ -31,13 +31,13 @@ class Quiz implements BlockValidatorInterface
             foreach ($questions as $index => $question) {
                 $questionNumber = $index + 1;
 
-                if (empty($question['type'])) {
+                if ($this->isBlank($question['type'] ?? null)) {
                     $errors[] = "Вопрос {$questionNumber}: не указан тип";
                 } elseif (!in_array($question['type'], ['single', 'multiple', 'text'])) {
                     $errors[] = "Вопрос {$questionNumber}: недопустимый тип вопроса";
                 }
 
-                if (empty($question['question'])) {
+                if ($this->isBlank($question['question'] ?? null)) {
                     $errors[] = "Вопрос {$questionNumber}: текст вопроса не может быть пустым";
                 } elseif (mb_strlen($question['question']) > 500) {
                     $errors[] = "Вопрос {$questionNumber}: текст слишком длинный (макс. 500 символов)";
@@ -51,7 +51,7 @@ class Quiz implements BlockValidatorInterface
                         foreach ($question['options'] as $optIndex => $option) {
                             $optNumber = $optIndex + 1;
 
-                            if (empty($option['text'])) {
+                            if ($this->isBlank($option['text'] ?? null)) {
                                 $errors[] = "Вопрос {$questionNumber}, вариант {$optNumber}: текст не может быть пустым";
                             } elseif (mb_strlen($option['text']) > 200) {
                                 $errors[] = "Вопрос {$questionNumber}, вариант {$optNumber}: текст слишком длинный";
@@ -84,7 +84,7 @@ class Quiz implements BlockValidatorInterface
                     } else {
                         $correctAnswer = null;
                         foreach ($question['options'] as $option) {
-                            if (isset($option['correct']) && $option['correct'] && !empty($option['text'])) {
+                            if (isset($option['correct']) && $option['correct'] && !$this->isBlank($option['text'] ?? null)) {
                                 $correctAnswer = $option['text'];
                                 break;
                             }
@@ -101,5 +101,10 @@ class Quiz implements BlockValidatorInterface
         }
 
         return $errors;
+    }
+
+    private function isBlank(mixed $value): bool
+    {
+        return $value === null || trim((string) $value) === '';
     }
 }

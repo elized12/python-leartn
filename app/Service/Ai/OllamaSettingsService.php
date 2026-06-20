@@ -107,6 +107,15 @@ PROMPT;
         return (string) config('ollama.keep_alive', '-1');
     }
 
+    public function keepAlivePayload(): int|string
+    {
+        $keepAlive = $this->keepAlive();
+
+        return preg_match('/^-?\d+$/', $keepAlive) === 1
+            ? (int) $keepAlive
+            : $keepAlive;
+    }
+
     public function saveModel(string $model): void
     {
         $settings = $this->settings();
@@ -125,7 +134,7 @@ PROMPT;
                 'model' => $model,
                 'prompt' => '',
                 'stream' => false,
-                'keep_alive' => $this->keepAlive(),
+                'keep_alive' => $this->keepAlivePayload(),
                 'options' => array_filter([
                     'num_predict' => 1,
                     'temperature' => 0,

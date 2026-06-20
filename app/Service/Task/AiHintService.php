@@ -105,7 +105,7 @@ class AiHintService
         return [
             'model' => $this->ollamaSettings->currentModel(),
             'stream' => $stream,
-            'keep_alive' => $this->ollamaSettings->keepAlive(),
+            'keep_alive' => $this->ollamaSettings->keepAlivePayload(),
             'messages' => [
                 [
                     'role' => 'system',
